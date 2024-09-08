@@ -1,3 +1,4 @@
+import os
 import json
 import requests
 from bs4 import BeautifulSoup
@@ -14,6 +15,7 @@ class Scraper():
         ("jujutsu kaisen", "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/",
         ("chainsaw man" , "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/"
     }
+    path_to_save_html = "./html_scraped/"
 
     def __init__(self) -> None:
         pass
@@ -37,14 +39,17 @@ class Scraper():
 
     def save_response_to_file(self, manga: str, publisher : str, response):
         filename = f"{manga.replace(' ', '_')}_{publisher}.txt"
+        full_path = os.path.join(self.path_to_save_html, filename)
+
+        os.makedirs(self.path_to_save_html, exist_ok=True)
 
         try:
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(full_path, 'w', encoding='utf-8') as f:
                 f.write(response)
-            print(f"Saved response to {filename}")
+            print(f"Saved response to {full_path}")
 
         except Exception as e:
-            print(f"Error saving the file {filename}: {e}")
+            print(f"Error saving the file {full_path}: {e}")
 
 
     def scrape(self, manga: str, url: str, params=None):

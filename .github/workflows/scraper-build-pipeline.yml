@@ -37,10 +37,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       
       - name: Install dependencies
-        run: pip install pytest pytest-md pytest-emoji
-   
-      - name: Install dependencies
-        run: pip install pytest pytest-md pytest-emoji
+        run: pip install -r tests_requirements.txt
       
       - name: Run PyTests
         uses: pavelzw/pytest-action@v2
