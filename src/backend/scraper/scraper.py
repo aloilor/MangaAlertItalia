@@ -15,6 +15,8 @@ class Scraper():
         ("chainsaw man" , "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/"
     }
 
+    def __init__(self) -> None:
+        pass
 
     def scrape_and_parse_all(self):
 
@@ -33,7 +35,7 @@ class Scraper():
 
 
 
-    def save_response_to_file(self, manga, publisher, response):
+    def save_response_to_file(self, manga: str, publisher : str, response):
         filename = f"{manga.replace(' ', '_')}_{publisher}.txt"
 
         try:
@@ -45,7 +47,7 @@ class Scraper():
             print(f"Error saving the file {filename}: {e}")
 
 
-    def scrape(self, manga, url, params=None):
+    def scrape(self, manga: str, url: str, params=None):
 
         try:
             response = requests.get(url, headers=self.headers, params=params, timeout=self.timeout)

@@ -1,4 +1,4 @@
-name: "Build CI/CD pipeline"
+name: "AWS Login pipeline"
 
 env:
   ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME}} 
@@ -8,14 +8,21 @@ env:
 on:
   push:
     branches:
-    - main
+      - main
     # paths:
-
+    paths-ignore:
+      - .github/**  
+      - docs/**
+      - README.md
 
   pull_request:
     branches:
-    - main
+      - main
     # paths:
+    paths-ignore:
+      - .github/**   
+      - docs/**
+      - README.md
 
 permissions:
   id-token: write
@@ -24,12 +31,11 @@ permissions:
 
 jobs:
   Build:
-    name: "Build and Deploy pipeline"
+    name: "AWS Login"
     runs-on: ubuntu-latest    
     defaults:
       run:
         shell: bash
-
 
     steps:
 
