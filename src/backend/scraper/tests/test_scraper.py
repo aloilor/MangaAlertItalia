@@ -1,9 +1,8 @@
 import pytest
 import requests
 from unittest.mock import patch, mock_open
-
 from bs4 import BeautifulSoup
-from scraper import Scraper
+from ..scraper import Scraper
 
 
 # Test data for mocking
