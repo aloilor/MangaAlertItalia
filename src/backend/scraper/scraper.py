@@ -66,7 +66,7 @@ class Scraper():
                 return None
     
         except requests.RequestException as e:
-            print(f"Error while fetching {manga}: {e}")
+            print(f"Exception Error while fetching {manga}: {e}")
             return None
 
 
@@ -99,7 +99,7 @@ class Scraper():
             return latest_manga
 
         else:
-            print(f"No results found for '{manga}' from '{publisher}'.")
+            print(f"Error: No results found for '{manga}' from '{publisher}'.")
             return None
 
 

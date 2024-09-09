@@ -142,10 +142,16 @@ star_comics_html = '''
     </div>
 '''
 
+invalid_html = '''
+<div class="no-products-found">No products available</div>
+'''
+
+
 
 @pytest.fixture
 def scraper():
     return Scraper() 
+
 
 def test_can_scrape_planet_manga(scraper, requests_mock):
     url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
@@ -156,9 +162,7 @@ def test_can_scrape_planet_manga(scraper, requests_mock):
 
     assert response is not None
     assert response == planet_manga_html
-    assert "Chainsaw Man 17" in response
-    assert "https://www.panini.it/shp_ita_it/chainsaw-man-17-mmost027-it08.html" in response
-    assert "19/09/24" in response
+
 
 def test_can_scrape_star_comics(scraper, requests_mock):
     url = "https://www.starcomics.com/titoli-fumetti/solo-leveling"
@@ -168,9 +172,31 @@ def test_can_scrape_star_comics(scraper, requests_mock):
 
     assert response is not None
     assert response == star_comics_html
-    assert "SOLO LEVELING n. 18" in response
-    assert "/fumetto/solo-leveling-18" in response
-    assert "03/09/2024" in response
+
+
+def test_scrape_error_handling(scraper, requests_mock):
+    url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
+    params = {"q": "chainsaw man"}
+    requests_mock.get(url, status_code=404)
+    
+    response = scraper.scrape("chainsaw man", url, params=params)
+    
+    assert response is None
+
+
+def test_scrape_exception_handling(scraper, requests_mock, capsys):
+    url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
+    params = {"q": "chainsaw man"}
+
+    requests_mock.get(url, exc=requests.exceptions.ConnectTimeout)
+    response = scraper.scrape("chainsaw man", url, params=params)
+
+    assert response is None
+    
+    # Verify print statement for logging the exception message
+    captured = capsys.readouterr()
+    assert "Exception Error while fetching" in captured.out
+
 
 def test_html_parse_planet_manga(scraper):
     response = planet_manga_html
@@ -181,6 +207,7 @@ def test_html_parse_planet_manga(scraper):
     assert result['link'] == "https://www.panini.it/shp_ita_it/chainsaw-man-17-mmost027-it08.html"
     assert result['release_date'] == "19/09/24"
 
+
 def test_html_parse_solo_leveling(scraper):
     response = star_comics_html
     result = scraper.html_parse_star_comics(response, "solo leveling", "star_comics")
@@ -190,6 +217,19 @@ def test_html_parse_solo_leveling(scraper):
     assert result['link']  == "https://www.starcomics.com/fumetto/solo-leveling-18" 
     assert result['release_date'] == "03/09/2024"
 
+
+def test_html_parse_planet_manga_error_handling(scraper):
+    response = invalid_html
+    result = scraper.html_parse_planet_manga(response, "chainsaw man", "planet_manga")
+    
+    assert result is None
+
+
+def test_html_parse_solo_leveling_error_handling(scraper):
+    response = invalid_html
+    result = scraper.html_parse_star_comics(response, "solo leveling", "star_comics")
+    
+    assert result is None
 
 
 
