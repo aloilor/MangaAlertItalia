@@ -15,13 +15,12 @@ class Scraper():
         ("jujutsu kaisen", "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/",
         ("chainsaw man" , "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/"
     }
-    path_to_save_html = "./html_scraped/"
+    path_to_save_html = "./scraped_html/"
 
     def __init__(self) -> None:
         pass
 
     def scrape_and_parse_all(self):
-
         for (manga, publisher), url in self.manga_to_url_dictionary.items():
 
             print(f"Scraping {manga} from {publisher}...")
