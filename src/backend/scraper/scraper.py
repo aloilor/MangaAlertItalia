@@ -53,7 +53,6 @@ class Scraper():
 
 
     def scrape(self, manga: str, url: str, params=None):
-
         try:
             response = requests.get(url, headers=self.headers, params=params, timeout=self.timeout)
             
@@ -71,7 +70,6 @@ class Scraper():
 
 
     def html_parse_planet_manga(self, response, manga, publisher):
-
         soup = BeautifulSoup(response, "html.parser")
         self.save_response_to_file(manga, publisher, soup.prettify())
 
@@ -97,7 +95,6 @@ class Scraper():
             }
             latest_manga_json = json.dumps(latest_manga, ensure_ascii=False, indent=4)
             print(latest_manga_json)
-
             return latest_manga_json
 
         else:
@@ -106,7 +103,6 @@ class Scraper():
 
 
     def html_parse_star_comics(self, response, manga, publisher):
-
         soup = BeautifulSoup(response, "html.parser")
         self.save_response_to_file(manga, publisher, soup.prettify())
 
@@ -132,7 +128,6 @@ class Scraper():
             }
             latest_manga_json = json.dumps(latest_manga, ensure_ascii=False, indent=4)
             print(latest_manga_json)
-
             return latest_manga_json
 
         else:
@@ -143,7 +138,6 @@ class Scraper():
 def main():
     scraper = Scraper()
     scraper.scrape_and_parse_all()
-
 
 
 if __name__ == "__main__":
