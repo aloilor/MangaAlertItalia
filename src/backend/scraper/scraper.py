@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 
 
 class Scraper():
-
     headers = { 
         "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" 
     }
@@ -16,6 +15,8 @@ class Scraper():
         ("chainsaw man" , "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/"
     }
     path_to_save_html = "./scraped_html/"
+    base_path_star_comics = "https://www.starcomics.com"
+
 
     def __init__(self) -> None:
         pass
@@ -66,6 +67,7 @@ class Scraper():
     
         except requests.RequestException as e:
             print(f"Error while fetching {manga}: {e}")
+            return None
 
 
     def html_parse_planet_manga(self, response, manga, publisher):
@@ -92,9 +94,9 @@ class Scraper():
                 "link": link,
                 "release_date": release_date
             }
-            latest_manga_json = json.dumps(latest_manga, ensure_ascii=False, indent=4)
-            print(latest_manga_json)
-            return latest_manga_json
+            print(latest_manga)
+
+            return latest_manga
 
         else:
             print(f"No results found for '{manga}' from '{publisher}'.")
@@ -115,7 +117,7 @@ class Scraper():
             title = title_tag.get_text(strip=True) if title_tag else ""
 
             link_tag = latest_item.find("a") 
-            link = "https://www.starcomics.com" + link_tag["href"] if link_tag else "" 
+            link = self.base_path_star_comics + link_tag["href"] if link_tag else "" 
 
             release_date_tag = latest_item.find("p", class_="card-text").find("span", class_="text-secondary")
             release_date = release_date_tag.get_text(strip=True) if release_date_tag else ""
@@ -125,9 +127,10 @@ class Scraper():
                 "link": link,
                 "release_date": release_date
             }
-            latest_manga_json = json.dumps(latest_manga, ensure_ascii=False, indent=4)
-            print(latest_manga_json)
-            return latest_manga_json
+            print(latest_manga)
+
+            
+            return latest_manga
 
         else:
             print(f"No results found for '{manga}' from '{publisher}'.")
