@@ -1,163 +1,121 @@
 import os
-import json
 import requests
 from bs4 import BeautifulSoup
 
 
-class Scraper():
-    headers = { 
-        "User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" 
+class MangaRelease:
+    """Represents a manga release."""
+    
+    def __init__(self, title: str, link: str, release_date: str, publisher: str):
+        self.title = title
+        self.link = link
+        self.release_date = release_date
+        self.publisher = publisher
+    
+    def __repr__(self):
+        return f"MangaRelease(title={self.title}, link={self.link}, release_date={self.release_date}, publisher={self.publisher})"
+
+
+class PublisherScraper:
+    """Base class for scraping different manga publishers."""
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     }
     timeout = 5
-    manga_to_url_dictionary = {
-        ("solo leveling", "star_comics") : "https://www.starcomics.com/titoli-fumetti/solo-leveling",
-        ("jujutsu kaisen", "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/",
-        ("chainsaw man" , "planet_manga") : "https://www.panini.it/shp_ita_it/catalogsearch/result/"
-    }
-    path_to_save_html = "./scraped_html/"
-    base_path_star_comics = "https://www.starcomics.com"
 
 
-    def __init__(self) -> None:
-        pass
-
-
-    def scrape_and_parse_all(self):
-        for (manga, publisher), url in self.manga_to_url_dictionary.items():
-
-            print(f"Scraping {manga} from {publisher}...")
-
-            if publisher == "planet_manga":
-                response = self.scrape(manga, url, params = { "q" : manga })
-                result_dict = self.html_parse_planet_manga(response, manga, publisher)
-
-            
-            elif publisher == "star_comics": 
-                response = self.scrape(manga, url)
-                result_dict = self.html_parse_star_comics(response, manga, publisher)
-
-
-    def save_response_to_file(self, manga: str, publisher : str, response):
-        filename = f"{manga.replace(' ', '_')}_{publisher}.txt"
-        full_path = os.path.join(self.path_to_save_html, filename)
-
-        os.makedirs(self.path_to_save_html, exist_ok=True)
-
-        try:
-            with open(full_path, 'w', encoding='utf-8') as f:
-                f.write(response)
-            print(f"Saved response to {full_path}")
-
-        except Exception as e:
-            print(f"Error saving the file {full_path}: {e}")
-
-
-    def scrape(self, manga: str, url: str, params=None):
-        try:
-            response = requests.get(url, headers=self.headers, params=params, timeout=self.timeout)
-            
-            # Check if the response is successful
-            if response.status_code == 200:
-                res_text = response.text
-                return res_text
-     
-            else:
-                print(f"Error: Received status code {response.status_code}")
-                return None
+    def __init__(self, manga: str, url: str):
+        self.manga = manga
+        self.url = url
     
+
+    def scrape(self, params=None):
+        """Scrapes the URL and returns the HTML response."""
+
+        try:
+            response = requests.get(self.url, headers=self.headers, params=params, timeout=self.timeout)
+            if response.status_code == 200:
+                return response.text
+            
+            else:
+                print(f"Error: Received status code {response.status_code} while scraping {self.manga}")
+                return None
+            
         except requests.RequestException as e:
-            print(f"Exception Error while fetching {manga}: {e}")
+            print(f"Exception Error while fetching {self.manga}: {e}")
             return None
 
 
-    def html_parse_planet_manga(self, response, manga, publisher):
+    def parse(self, response: str):
+        """Abstract method for parsing the response; to be implemented by subclasses."""
+        raise NotImplementedError("Subclasses must implement the 'parse' method.")
+
+
+class PlanetMangaScraper(PublisherScraper):
+    """Scraper for Planet Manga publisher."""
+
+    def parse(self, response: str):
+        if response is None:
+            return None
         
-        if response is None: 
-            print("Error: No response found")
-            return None
-
         soup = BeautifulSoup(response, "html.parser")
-        
-        #self.save_response_to_file(manga, publisher, soup.prettify())
-
-        # First item is the latest, Planet Manga automatically orders by decreasing release date
         latest_item = soup.find("div", class_="product-item-info")
-
-        if latest_item:
-            print(f"Found the latest item for '{manga}' from '{publisher}':")
-
-            title_tag = latest_item.find("h3", class_="product-item-name")
-            title = title_tag.get_text(strip=True) if title_tag else ""
-
-            link_tag = latest_item.find("a", class_="product-item-link")
-            link = link_tag["href"] if link_tag else ""
-
-            release_date_tag = latest_item.find("div", class_="product-item-attribute-release-date")
-            release_date = release_date_tag.get_text(strip=True) if release_date_tag else ""
-
-            latest_manga = {
-                "title": title,
-                "link": link,
-                "release_date": release_date,
-                "publisher": publisher
-            }
-            print(latest_manga)
-
-            return latest_manga
-
-        else:
-            print(f"Error: No results found for '{manga}' from '{publisher}'.")
-            return None
-
-
-    def html_parse_star_comics(self, response, manga, publisher):
         
-        if response is None: 
-            print("Error: No response found")
-            return None
+        if latest_item:
+            title = latest_item.find("h3", class_="product-item-name").get_text(strip=True) if latest_item.find("h3") else ""
+            link = latest_item.find("a", class_="product-item-link")["href"] if latest_item.find("a") else ""
+            release_date = latest_item.find("div", class_="product-item-attribute-release-date").get_text(strip=True) if latest_item.find("div", class_="product-item-attribute-release-date") else ""
+            
+            return MangaRelease(title, link, release_date, "Planet Manga")
+        
+        print(f"Error: No results found for '{self.manga}' from 'Planet Manga'.")
+        return None
 
+
+class StarComicsScraper(PublisherScraper):
+    """Scraper for Star Comics publisher."""
+
+    base_url = "https://www.starcomics.com"
+    
+    def parse(self, response: str):
+        if response is None:
+            return None
+        
         soup = BeautifulSoup(response, "html.parser")
+        latest_item = soup.find("div", class_="fumetto-card")
         
-        #self.save_response_to_file(manga, publisher, soup.prettify())
-
-        # First item is the latest, Star Comics automatically orders by decreasing release date
-        latest_item = soup.find("div", class_="fumetto-card")  
-
         if latest_item:
-            print(f"Found the latest item for '{manga}' from '{publisher}':")
+            title = latest_item.find("h4", class_="card-title").get_text(strip=True) if latest_item.find("h4") else ""
+            link = self.base_url + latest_item.find("a")["href"] if latest_item.find("a") else ""
+            release_date = latest_item.find("p", class_="card-text").find("span", class_="text-secondary").get_text(strip=True) if latest_item.find("p").find("span") else ""
+            
+            return MangaRelease(title, link, release_date, "Star Comics")
+        
+        print(f"Error: No results found for '{self.manga}' from 'Star Comics'.")
+        return None
+    
 
-            title_tag = latest_item.find("h4", class_="card-title")  
-            title = title_tag.get_text(strip=True) if title_tag else ""
+    class MangaScraperApp:
+        """Orchestrator class to manage scraping from multiple sources."""
 
-            link_tag = latest_item.find("a") 
-            link = self.base_path_star_comics + link_tag["href"] if link_tag else "" 
+        def __init__(self):
+            #self.file_handler = FileHandler("./scraped_html/")
+            self.scrapers = [
+                PlanetMangaScraper("jujutsu kaisen", "https://www.panini.it/shp_ita_it/catalogsearch/result/?q=jujutsu+kaisen"),
+                PlanetMangaScraper("chainsaw man", "https://www.panini.it/shp_ita_it/catalogsearch/result/?q=chainsaw+man"),
+                StarComicsScraper("solo leveling", "https://www.starcomics.com/titoli-fumetti/solo-leveling")
+            ]
 
-            release_date_tag = latest_item.find("p", class_="card-text").find("span", class_="text-secondary")
-            release_date = release_date_tag.get_text(strip=True) if release_date_tag else ""
+        def scrape_and_notify(self):
+            for scraper in self.scrapers:
+                print(f"Scraping {scraper.manga}...")
+                response = scraper.scrape(params={"q": scraper.manga} if isinstance(scraper, PlanetMangaScraper) else None)
+                manga_release = scraper.parse(response)
 
-            latest_manga = {
-                "title": title,
-                "link": link,
-                "release_date": release_date,
-                "publisher": publisher
-            }
-            print(latest_manga)
-
-            return latest_manga
-
-        else:
-            print(f"No results found for '{manga}' from '{publisher}'.")
-            return None
-
-
-def main():
-    scraper = Scraper()
-    scraper.scrape_and_parse_all()
-
-
-if __name__ == "__main__":
-    main()
-
+                if manga_release:
+                    print(f"Found release: {manga_release}")
+                    #self.file_handler.save_response_to_file(scraper.manga, manga_release.publisher, response)
 
 
 

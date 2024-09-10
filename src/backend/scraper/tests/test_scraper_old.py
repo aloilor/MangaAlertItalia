@@ -4,7 +4,8 @@ import tempfile
 import os
 from unittest.mock import patch, mock_open
 from bs4 import BeautifulSoup
-from ..scraper import PublisherScraper
+from ..scraper_old import Scraper
+
 
 # Test data for mocking
 planet_manga_html = '''
@@ -146,5 +147,152 @@ star_comics_html = '''
 invalid_html = '''
 <div class="no-products-found">No products available</div>
 '''
+
+
+
+@pytest.fixture
+def scraper():
+    return Scraper() 
+
+
+def test_can_scrape_planet_manga(scraper, requests_mock):
+    url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
+    params = {"q": "chainsaw man"}
+    requests_mock.get(url, text=planet_manga_html)
+    
+    response = scraper.scrape("chainsaw man", url, params=params)
+
+    assert response is not None
+    assert response == planet_manga_html
+
+
+def test_can_scrape_star_comics(scraper, requests_mock):
+    url = "https://www.starcomics.com/titoli-fumetti/solo-leveling"
+    requests_mock.get(url, text=star_comics_html)
+
+    response = scraper.scrape("solo leveling", url)
+
+    assert response is not None
+    assert response == star_comics_html
+
+
+def test_scrape_error_handling(scraper, requests_mock):
+    url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
+    params = {"q": "chainsaw man"}
+    requests_mock.get(url, status_code=404)
+    
+    response = scraper.scrape("chainsaw man", url, params=params)
+    
+    assert response is None
+
+
+def test_scrape_exception_handling(scraper, requests_mock, capsys):
+    url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
+    params = {"q": "chainsaw man"}
+
+    requests_mock.get(url, exc=requests.exceptions.ConnectTimeout)
+    response = scraper.scrape("chainsaw man", url, params=params)
+
+    assert response is None
+    
+    # Verify print statement for logging the exception message
+    captured = capsys.readouterr()
+    assert "Exception Error while fetching" in captured.out
+
+
+def test_html_parse_planet_manga(scraper):
+    response = planet_manga_html
+    result = scraper.html_parse_planet_manga(response, "chainsaw man", "planet_manga")
+
+    assert result is not None
+    assert result['title'] == "Chainsaw Man 17"
+    assert result['link'] == "https://www.panini.it/shp_ita_it/chainsaw-man-17-mmost027-it08.html"
+    assert result['release_date'] == "19/09/24"
+    assert result['publisher'] == "planet_manga"
+
+
+def test_html_parse_solo_leveling(scraper):
+    response = star_comics_html
+    result = scraper.html_parse_star_comics(response, "solo leveling", "star_comics")
+
+    assert result is not None
+    assert result['title'] == "SOLO LEVELING n. 18"
+    assert result['link']  == "https://www.starcomics.com/fumetto/solo-leveling-18" 
+    assert result['release_date'] == "03/09/2024"
+    assert result['publisher'] == "star_comics"
+
+
+def test_html_parse_planet_manga_error_handling_invalid_html(scraper):
+    response = invalid_html
+    result = scraper.html_parse_planet_manga(response, "chainsaw man", "planet_manga")
+    
+    assert result is None
+
+
+def test_html_parse_planet_manga_error_handling_none_response(scraper):
+    response = None
+    result = scraper.html_parse_planet_manga(response, "chainsaw man", "planet_manga")
+    
+    assert result is None
+
+
+def test_html_parse_star_comics_error_handling_invalid_html(scraper):
+    response = invalid_html
+    result = scraper.html_parse_star_comics(response, "solo leveling", "star_comics")
+    
+    assert result is None
+
+
+def test_html_parse_star_comics_error_handling_none_response(scraper):
+    response = None
+    result = scraper.html_parse_planet_manga(response, "solo leveling", "star_comics")
+    
+    assert result is None
+
+
+def test_save_response_to_file(scraper):
+    response = planet_manga_html
+    manga = "chainsaw man"
+    publisher = "planet_manga"
+
+    # Temporary files and directory to keep everything clean 
+    with tempfile.TemporaryDirectory() as temp_dir:
+
+        scraper.path_to_save_html = temp_dir
+        scraper.save_response_to_file("chainsaw man", "planet_manga", response)
+
+        expected_filename = f"{manga.replace(' ', '_')}_{publisher}.txt"
+        expected_file_path = os.path.join(temp_dir, expected_filename)
+
+        assert os.path.exists(expected_file_path) is not None
+
+        with open(expected_file_path, 'r', encoding='utf-8') as f:
+            file_content = f.read()
+            assert file_content == response 
+
+
+def test_save_response_to_file_exception_handling(scraper):
+    response = planet_manga_html
+    manga = "chainsaw man"
+    publisher = "planet_manga"
+
+    scraper.path_to_save_html = "/fake/path"
+
+    # Mock os.makedirs to prevent actual directory creation
+    with patch("os.makedirs", return_value=True):
+        
+        # Simulate an IOError when attempting to open the file
+        with patch("builtins.open", mock_open()) as mock_file:
+            mock_file.side_effect = IOError("File write error")
+        
+            with patch("builtins.print") as mock_print:
+                scraper.save_response_to_file(manga, publisher, response)
+
+                # Check if the error message was printed
+                mock_print.assert_called_with(f"Error saving the file /fake/path/chainsaw_man_planet_manga.txt: File write error")
+
+
+
+
 
 
