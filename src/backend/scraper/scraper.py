@@ -21,6 +21,7 @@ class Scraper():
     def __init__(self) -> None:
         pass
 
+
     def scrape_and_parse_all(self):
         for (manga, publisher), url in self.manga_to_url_dictionary.items():
 
@@ -28,13 +29,12 @@ class Scraper():
 
             if publisher == "planet_manga":
                 response = self.scrape(manga, url, params = { "q" : manga })
-                self.html_parse_planet_manga(response, manga, publisher)
+                result_dict = self.html_parse_planet_manga(response, manga, publisher)
 
             
             elif publisher == "star_comics": 
                 response = self.scrape(manga, url)
-                self.html_parse_star_comics(response, manga, publisher)
-
+                result_dict = self.html_parse_star_comics(response, manga, publisher)
 
 
     def save_response_to_file(self, manga: str, publisher : str, response):
@@ -71,8 +71,14 @@ class Scraper():
 
 
     def html_parse_planet_manga(self, response, manga, publisher):
+        
+        if response is None: 
+            print("Error: No response found")
+            return None
+
         soup = BeautifulSoup(response, "html.parser")
-        self.save_response_to_file(manga, publisher, soup.prettify())
+        
+        #self.save_response_to_file(manga, publisher, soup.prettify())
 
         # First item is the latest, Planet Manga automatically orders by decreasing release date
         latest_item = soup.find("div", class_="product-item-info")
@@ -92,7 +98,8 @@ class Scraper():
             latest_manga = {
                 "title": title,
                 "link": link,
-                "release_date": release_date
+                "release_date": release_date,
+                "publisher": publisher
             }
             print(latest_manga)
 
@@ -104,8 +111,14 @@ class Scraper():
 
 
     def html_parse_star_comics(self, response, manga, publisher):
+        
+        if response is None: 
+            print("Error: No response found")
+            return None
+
         soup = BeautifulSoup(response, "html.parser")
-        self.save_response_to_file(manga, publisher, soup.prettify())
+        
+        #self.save_response_to_file(manga, publisher, soup.prettify())
 
         # First item is the latest, Star Comics automatically orders by decreasing release date
         latest_item = soup.find("div", class_="fumetto-card")  
@@ -125,11 +138,11 @@ class Scraper():
             latest_manga = {
                 "title": title,
                 "link": link,
-                "release_date": release_date
+                "release_date": release_date,
+                "publisher": publisher
             }
             print(latest_manga)
 
-            
             return latest_manga
 
         else:

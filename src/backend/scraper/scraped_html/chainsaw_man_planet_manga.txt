@@ -1,3 +1,0 @@
-<div class="no-products-found">
- No products available
-</div>
