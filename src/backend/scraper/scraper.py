@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 
 class MangaRelease:
-    """Represents a manga release."""
+    """Represents a manga release"""
     
     def __init__(self, title: str, link: str, release_date: str, publisher: str):
         self.title = title
@@ -17,7 +17,7 @@ class MangaRelease:
 
 
 class FileHandler:
-    """Handles file saving functionality for scraped data."""
+    """Handles file saving functionality for scraped data"""
     
     def __init__(self, path_to_save_html):
         self.path_to_save_html = path_to_save_html
@@ -36,7 +36,7 @@ class FileHandler:
 
 
 class PublisherScraper:
-    """Base class for scraping different manga publishers."""
+    """Base class for scraping different manga publishers websites"""
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
@@ -48,7 +48,7 @@ class PublisherScraper:
         self.url = url
     
     def scrape(self, params=None):
-        """Scrapes the URL and returns the HTML response."""
+        """Scrapes the URL and returns the HTML response"""
 
         try:
             response = requests.get(self.url, headers=self.headers, params=params, timeout=self.timeout)
@@ -67,7 +67,7 @@ class PublisherScraper:
 
 
 class PlanetMangaScraper(PublisherScraper):
-    """Scraper for Planet Manga publisher."""
+    """Scraper for Planet Manga publisher"""
 
     def parse(self, response: str):
         if response is None:
@@ -81,14 +81,15 @@ class PlanetMangaScraper(PublisherScraper):
             link = latest_item.find("a", class_="product-item-link")["href"] if latest_item.find("a", class_="product-item-link")["href"] else ""
             release_date = latest_item.find("div", class_="product-item-attribute-release-date").get_text(strip=True) if latest_item.find("div", class_="product-item-attribute-release-date") else ""
             
-            return MangaRelease(title, link, release_date, "Planet Manga")
+            # Return None if one of title, link and release_date is empty
+            return MangaRelease(title, link, release_date, "planet_manga") if title and link and release_date else None
         
         print(f"Error: No results found for '{self.manga}' from 'Planet Manga'.")
         return None
 
 
 class StarComicsScraper(PublisherScraper):
-    """Scraper for Star Comics publisher."""
+    """Scraper for Star Comics publisher"""
 
     base_url = "https://www.starcomics.com"
     
@@ -104,14 +105,14 @@ class StarComicsScraper(PublisherScraper):
             link = self.base_url + latest_item.find("a")["href"] if latest_item.find("a")["href"] else ""
             release_date = latest_item.find("p", class_="card-text").find("span", class_="text-secondary").get_text(strip=True) if latest_item.find("p", class_="card-text").find("span", class_="text-secondary") else ""
             
-            return MangaRelease(title, link, release_date, "Star Comics")
+            return MangaRelease(title, link, release_date, "planet_manga")
         
         print(f"Error: No results found for '{self.manga}' from 'Star Comics'.")
         return None
     
 
 class MangaScraperApp:
-    """Orchestrator class to manage scraping from multiple sources."""
+    """Orchestrator class to manage scraping from multiple sources"""
 
     def __init__(self):
         #self.file_handler = FileHandler("./scraped_html/")

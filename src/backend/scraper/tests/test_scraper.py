@@ -2,12 +2,12 @@ import pytest
 import requests
 import tempfile
 import os
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, Mock
 from bs4 import BeautifulSoup
-from ..scraper import PublisherScraper
+from ..scraper import PublisherScraper, PlanetMangaScraper, StarComicsScraper, MangaRelease, FileHandler, MangaScraperApp
 
 # Test data for mocking
-planet_manga_html = '''
+planet_manga_valid_html = '''
     <li class="item product product-item">
         <div class="product-item-info" data-container="product-grid" id="product-item-info_244371">
             <!-- PNN labels -->
@@ -102,6 +102,15 @@ planet_manga_html = '''
 
 '''
 
+planet_manga_missing_html = '''
+    <div class="product-item-info">
+        <h3 class="product-item-name"></h3>
+        <a class="product-item-link" href=""></a>
+        <div class="product-item-attribute-release-date"></div>
+    </div>
+
+'''
+
 star_comics_html = '''
     <div class="col-sm-6 col-lg-3 mb-4">
         <div class="card fumetto-card border-0">
@@ -143,8 +152,99 @@ star_comics_html = '''
     </div>
 '''
 
-invalid_html = '''
+no_results_html = '''
 <div class="no-products-found">No products available</div>
 '''
+
+
+class TestPublisherScraper:
+
+    @pytest.fixture
+    def scraper(self):
+        manga = "chainsaw man"
+        url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
+        return PublisherScraper(manga, url)
+
+    def test_scrape_success(self, scraper, requests_mock):
+        params = {"q": "chainsaw man"}
+        requests_mock.get(scraper.url, text=planet_manga_valid_html)
+        response = scraper.scrape(params)
+
+        assert response is not None
+        assert response == planet_manga_valid_html
+
+    def test_scrape_non_200_status(self, scraper, requests_mock):
+        params = {"q": "chainsaw man"}
+        requests_mock.get(scraper.url, status_code=404)
+        response = scraper.scrape(params)
+
+        assert response is None
+
+    def test_scrape_exception(self, scraper, requests_mock):
+        params = {"q": "chainsaw man"}
+
+        requests_mock.get(scraper.url, exc=requests.exceptions.ConnectTimeout)
+        response = scraper.scrape(params)
+
+        assert response is None
+
+
+class TestPlanetMangaScraper:
+
+    @pytest.fixture
+    def scraper(self):
+        manga = "chainsaw man"
+        url = "https://www.panini.it/shp_ita_it/catalogsearch/result/"
+        return PlanetMangaScraper(manga, url)
+
+    def test_parse_valid_response(self, scraper):
+        """Test parse method with valid HTML content"""
+        scraper.scrape = Mock(return_value=planet_manga_valid_html)
+        
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        expected_release = MangaRelease(
+            title = "Chainsaw Man 17",
+            link = "https://www.panini.it/shp_ita_it/chainsaw-man-17-mmost027-it08.html",
+            release_date = "19/09/24",
+            publisher = "planet_manga"
+        )
+
+        assert result is not None
+        assert isinstance(result, MangaRelease)
+        assert result.title == expected_release.title
+        assert result.link == expected_release.link
+        assert result.release_date == expected_release.release_date
+        assert result.publisher == expected_release.publisher
+    
+    def test_parse_none_response(self, scraper):
+        """Test parse method with None HTML content"""
+        scraper.scrape = Mock(return_value=None)
+        
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        assert result is None
+    
+    def test_parse_no_results(self, scraper):
+        """Test parse method when no product item is found"""
+        scraper.scrape = Mock(return_value=no_results_html)
+        
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        assert result is None
+    
+    def test_parse_missing_elements(self, scraper):
+        """Test parse method with missing title, link, and release date"""
+        scraper.scrape = Mock(return_value=planet_manga_missing_html)
+
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        assert result is None
+
+    
 
 
