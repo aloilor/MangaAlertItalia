@@ -108,7 +108,6 @@ planet_manga_missing_html = '''
         <a class="product-item-link" href=""></a>
         <div class="product-item-attribute-release-date"></div>
     </div>
-
 '''
 
 star_comics_html = '''
@@ -149,6 +148,14 @@ star_comics_html = '''
                 </div>
             </div>
         </div>
+    </div>
+'''
+
+star_comics_missing_html = '''
+    <div class="fumetto-card">
+        <h4 class="card-title"></h4>
+        <a href=""></a>
+        <p class="card-text"><span class="text-secondary"></span></p>
     </div>
 '''
 
@@ -218,21 +225,29 @@ class TestPlanetMangaScraper:
         assert result.release_date == expected_release.release_date
         assert result.publisher == expected_release.publisher
     
-    def test_parse_none_response(self, scraper):
+    def test_parse_none_response(self, scraper, capsys):
         """Test parse method with None HTML content"""
         scraper.scrape = Mock(return_value=None)
         
         response = scraper.scrape()
         result = scraper.parse(response)
 
+        captured = capsys.readouterr()
+        expected_message = (f"Error: None response 'chainsaw man' from 'Planet Manga'\n")
+        assert captured.out == expected_message
+
         assert result is None
     
-    def test_parse_no_results(self, scraper):
+    def test_parse_no_results(self, scraper, capsys):
         """Test parse method when no product item is found"""
         scraper.scrape = Mock(return_value=no_results_html)
         
         response = scraper.scrape()
         result = scraper.parse(response)
+
+        captured = capsys.readouterr()
+        expected_message = (f"Error: No results found for 'chainsaw man' from 'Planet Manga'\n")
+        assert captured.out == expected_message
 
         assert result is None
     
@@ -245,6 +260,72 @@ class TestPlanetMangaScraper:
 
         assert result is None
 
+
+class TestStarComicsScraper:
+
+    @pytest.fixture
+    def scraper(self):
+        manga = "solo leveling"
+        url = "https://www.starcomics.com/titoli-fumetti/solo-leveling"
+        return StarComicsScraper(manga, url)
+    
+    def test_parse_valid_response(self, scraper):
+        """Test parse method with valid HTML content"""
+        scraper.scrape = Mock(return_value=star_comics_html)
+        
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        expected_release = MangaRelease(
+            title = "SOLO LEVELING n. 18",
+            link = "https://www.starcomics.com/fumetto/solo-leveling-18",
+            release_date = "03/09/2024",
+            publisher = "star_comics"
+        )
+
+        assert result is not None
+        assert isinstance(result, MangaRelease)
+        assert result.title == expected_release.title
+        assert result.link == expected_release.link
+        assert result.release_date == expected_release.release_date
+        assert result.publisher == expected_release.publisher
+
+    def test_parse_none_response(self, scraper, capsys):
+        """Test parse method with None HTML content"""
+        scraper.scrape = Mock(return_value=None)
+        
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        captured = capsys.readouterr()
+        expected_message = (f"Error: None response 'solo leveling' from 'Star Comics'\n")
+        assert captured.out == expected_message
+
+        assert result is None
+
+
+    def test_parse_no_results(self, scraper, capsys):
+        """Test parse method when no product item is found"""
+        scraper.scrape = Mock(return_value=no_results_html)
+        
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        captured = capsys.readouterr()
+        expected_message = (f"Error: No results found for 'solo leveling' from 'Star Comics'\n")
+        assert captured.out == expected_message
+
+        assert result is None
+
+    
+    def test_parse_missing_elements(self, scraper):
+        """Test parse method with missing title, link, and release date"""
+        scraper.scrape = Mock(return_value=planet_manga_missing_html)
+
+        response = scraper.scrape()
+        result = scraper.parse(response)
+
+        assert result is None
     
 
 

@@ -62,8 +62,8 @@ class PublisherScraper:
             return None
 
     def parse(self, response: str):
-        """Abstract method for parsing the response; to be implemented by Scraper subclasses."""
-        raise NotImplementedError("Subclasses must implement the 'parse' method.")
+        """Abstract method for parsing the response; to be implemented by Scraper subclasses"""
+        raise NotImplementedError("Subclasses must implement the 'parse' method")
 
 
 class PlanetMangaScraper(PublisherScraper):
@@ -71,6 +71,7 @@ class PlanetMangaScraper(PublisherScraper):
 
     def parse(self, response: str):
         if response is None:
+            print(f"Error: None response '{self.manga}' from 'Planet Manga'")
             return None
         
         soup = BeautifulSoup(response, "html.parser")
@@ -84,7 +85,7 @@ class PlanetMangaScraper(PublisherScraper):
             # Return None if one of title, link and release_date is empty
             return MangaRelease(title, link, release_date, "planet_manga") if title and link and release_date else None
         
-        print(f"Error: No results found for '{self.manga}' from 'Planet Manga'.")
+        print(f"Error: No results found for '{self.manga}' from 'Planet Manga'")
         return None
 
 
@@ -95,6 +96,7 @@ class StarComicsScraper(PublisherScraper):
     
     def parse(self, response: str):
         if response is None:
+            print(f"Error: None response '{self.manga}' from 'Star Comics'")
             return None
         
         soup = BeautifulSoup(response, "html.parser")
@@ -105,9 +107,9 @@ class StarComicsScraper(PublisherScraper):
             link = self.base_url + latest_item.find("a")["href"] if latest_item.find("a")["href"] else ""
             release_date = latest_item.find("p", class_="card-text").find("span", class_="text-secondary").get_text(strip=True) if latest_item.find("p", class_="card-text").find("span", class_="text-secondary") else ""
             
-            return MangaRelease(title, link, release_date, "planet_manga")
+            return MangaRelease(title, link, release_date, "star_comics") if title and link and release_date else None
         
-        print(f"Error: No results found for '{self.manga}' from 'Star Comics'.")
+        print(f"Error: No results found for '{self.manga}' from 'Star Comics'")
         return None
     
 
