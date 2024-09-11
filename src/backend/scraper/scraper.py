@@ -21,12 +21,12 @@ class FileHandler:
     
     def __init__(self, path_to_save_html):
         self.path_to_save_html = path_to_save_html
-        os.makedirs(self.path_to_save_html, exist_ok=True)
     
     def save_response_to_file(self, manga: str, publisher: str, response: str):
         filename = f"{manga.replace(' ', '_')}_{publisher}.txt"
         full_path = os.path.join(self.path_to_save_html, filename)
 
+        os.makedirs(self.path_to_save_html, exist_ok=True)
         try:
             with open(full_path, 'w', encoding='utf-8') as f:
                 f.write(response)

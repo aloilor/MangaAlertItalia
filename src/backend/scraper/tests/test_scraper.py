@@ -3,7 +3,6 @@ import requests
 import tempfile
 import os
 from unittest.mock import patch, mock_open, Mock
-from bs4 import BeautifulSoup
 from ..scraper import PublisherScraper, PlanetMangaScraper, StarComicsScraper, MangaRelease, FileHandler, MangaScraperApp
 
 # Test data for mocking
@@ -164,6 +163,86 @@ no_results_html = '''
 '''
 
 
+class TestMangaRelease:
+
+    def test_manga_release_repr(self):
+        """Test that the __repr__ method returns the correct string."""
+
+        title = "Attack on Titan Vol. 1"
+        link = "https://example.com/attack-on-titan-vol-1"
+        release_date = "2023-10-01"
+        publisher = "Kodansha"
+        
+        manga = MangaRelease(title, link, release_date, publisher)
+        
+        expected_repr = (
+            "MangaRelease(\n"
+            " title: Attack on Titan Vol. 1,\n"
+            " link: https://example.com/attack-on-titan-vol-1,\n"
+            " release_date: 2023-10-01,\n"
+            " publisher: Kodansha\n"
+            ")\n"
+        )
+        
+        assert repr(manga) == expected_repr
+
+
+class TestFileHandler:
+
+    def test_save_response_to_file_success(self):
+        response = planet_manga_valid_html
+        manga = "chainsaw man"
+        publisher = "planet_manga"
+
+        # Temporary files and directory to keep everything clean 
+        with tempfile.TemporaryDirectory() as temp_dir:
+            handler = FileHandler(temp_dir)
+            handler.save_response_to_file(manga, publisher, response)
+
+            expected_filename = f"{manga.replace(' ', '_')}_{publisher}.txt"
+            expected_file_path = os.path.join(temp_dir, expected_filename)
+
+            assert os.path.exists(expected_file_path) is not None
+
+            with open(expected_file_path, 'r', encoding='utf-8') as f:
+                file_content = f.read()
+                assert file_content == response 
+    
+    def test_save_response_to_file_exception(self):
+        response = planet_manga_valid_html
+        manga = "chainsaw man"
+        publisher = "planet_manga"
+        path_to_save_html = "/fake/path"
+
+
+        # Mock os.makedirs to prevent actual directory creation
+        with patch("os.makedirs", return_value=True):
+            handler = FileHandler(path_to_save_html)
+
+            # Simulate an IOError when attempting to open the file
+            with patch("builtins.open", mock_open()) as mock_file:
+                mock_file.side_effect = IOError("File write error")
+            
+                with patch("builtins.print") as mock_print:
+                    handler.save_response_to_file(manga, publisher, response)
+
+                    # Check if the error message was printed
+                    mock_print.assert_called_with(f"Error saving the file /fake/path/chainsaw_man_planet_manga.txt: File write error")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class TestPublisherScraper:
 
     @pytest.fixture
@@ -303,7 +382,6 @@ class TestStarComicsScraper:
 
         assert result is None
 
-
     def test_parse_no_results(self, scraper, capsys):
         """Test parse method when no product item is found"""
         scraper.scrape = Mock(return_value=no_results_html)
@@ -317,7 +395,6 @@ class TestStarComicsScraper:
 
         assert result is None
 
-    
     def test_parse_missing_elements(self, scraper):
         """Test parse method with missing title, link, and release date"""
         scraper.scrape = Mock(return_value=planet_manga_missing_html)
