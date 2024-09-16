@@ -10,9 +10,9 @@ class MangaRelease:
     def __repr__(self):
         return (
             f"MangaRelease(\n"
-            f"  title: {self.title},\n"
-            f"  link: {self.link},\n"
-            f"  release_date: {self.release_date},\n"
-            f"  publisher: {self.publisher}\n"
+            f" title: {self.title},\n"
+            f" link: {self.link},\n"
+            f" release_date: {self.release_date},\n"
+            f" publisher: {self.publisher}\n"
             f")\n"
         )

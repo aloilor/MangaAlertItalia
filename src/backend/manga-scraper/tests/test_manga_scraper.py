@@ -228,12 +228,12 @@ class TestFileHandler:
             with patch("builtins.open", mock_open()) as mock_file:
                 mock_file.side_effect = IOError("File write error")
             
-                with patch("builtins.print") as mock_print:
+                with patch("utils.file_handler.logger") as mock_logger:
                     handler.save_response_to_file(manga, publisher, response)
 
-                    # Check if the error message was printed
-                    mock_print.assert_called_with(f"Error saving the file /fake/path/chainsaw_man_planet_manga.txt: File write error")
-
+                    mock_logger.error.assert_called_with(
+                        f"Error saving file /fake/path/chainsaw_man_planet_manga.txt: File write error"
+                    )
 
 class TestPublisherScraper:
 
@@ -300,35 +300,41 @@ class TestPlanetMangaScraper:
         """Test parse method with None HTML content"""
         scraper.scrape = Mock(return_value=None)
         
-        response = scraper.scrape()
-        result = scraper.parse(response)
-
-        captured = capsys.readouterr()
-        expected_message = (f"Error: None response 'chainsaw man' from 'Planet Manga'\n")
-        assert captured.out == expected_message
-
+        with patch("scrapers.planet_manga_scraper.logger") as mock_logger:
+            response = scraper.scrape()
+            result = scraper.parse(response)            
+            mock_logger.error.assert_called_with(
+                f"No response for '{scraper.manga}' from 'Planet Manga'"
+            )
+        
         assert result is None
+
     
     def test_parse_no_results(self, scraper, capsys):
         """Test parse method when no product item is found"""
         scraper.scrape = Mock(return_value=no_results_html)
         
-        response = scraper.scrape()
-        result = scraper.parse(response)
-
-        captured = capsys.readouterr()
-        expected_message = (f"Error: No results found for 'chainsaw man' from 'Planet Manga'\n")
-        assert captured.out == expected_message
-
+        with patch("scrapers.planet_manga_scraper.logger") as mock_logger:
+            response = scraper.scrape()
+            result = scraper.parse(response)
+            mock_logger.error.assert_called_with(
+                f"No results found for '{scraper.manga}' from 'Planet Manga'"
+            )
+        
         assert result is None
+
     
     def test_parse_missing_elements(self, scraper):
         """Test parse method with missing title, link, and release date"""
         scraper.scrape = Mock(return_value=planet_manga_missing_html)
 
-        response = scraper.scrape()
-        result = scraper.parse(response)
-
+        with patch("scrapers.planet_manga_scraper.logger") as mock_logger:
+            response = scraper.scrape()
+            result = scraper.parse(response)
+            mock_logger.error.assert_called_with(
+                f"Missing data in response for '{scraper.manga}' from 'Planet Manga'"
+            )
+        
         assert result is None
 
 
@@ -365,27 +371,32 @@ class TestStarComicsScraper:
         """Test parse method with None HTML content"""
         scraper.scrape = Mock(return_value=None)
         
-        response = scraper.scrape()
-        result = scraper.parse(response)
+        
 
-        captured = capsys.readouterr()
-        expected_message = (f"Error: None response 'solo leveling' from 'Star Comics'\n")
-        assert captured.out == expected_message
+        with patch("scrapers.star_comics_scraper.logger") as mock_logger:
+            response = scraper.scrape()
+            result = scraper.parse(response)            
+            mock_logger.error.assert_called_with(
+                f"No response for '{scraper.manga}' from 'Star Comics'"
+            )
 
         assert result is None
+
 
     def test_parse_no_results(self, scraper, capsys):
         """Test parse method when no product item is found"""
         scraper.scrape = Mock(return_value=no_results_html)
         
-        response = scraper.scrape()
-        result = scraper.parse(response)
+        
 
-        captured = capsys.readouterr()
-        expected_message = (f"Error: No results found for 'solo leveling' from 'Star Comics'\n")
-        assert captured.out == expected_message
-
+        with patch("scrapers.star_comics_scraper.logger") as mock_logger:
+            response = scraper.scrape()
+            result = scraper.parse(response)
+            mock_logger.error.assert_called_with(
+                f"No results found for '{scraper.manga}' from 'Star Comics'"
+            )
         assert result is None
+
 
     def test_parse_missing_elements(self, scraper):
         """Test parse method with missing title, link, and release date"""
