@@ -371,8 +371,6 @@ class TestStarComicsScraper:
         """Test parse method with None HTML content"""
         scraper.scrape = Mock(return_value=None)
         
-        
-
         with patch("scrapers.star_comics_scraper.logger") as mock_logger:
             response = scraper.scrape()
             result = scraper.parse(response)            
@@ -387,8 +385,6 @@ class TestStarComicsScraper:
         """Test parse method when no product item is found"""
         scraper.scrape = Mock(return_value=no_results_html)
         
-        
-
         with patch("scrapers.star_comics_scraper.logger") as mock_logger:
             response = scraper.scrape()
             result = scraper.parse(response)

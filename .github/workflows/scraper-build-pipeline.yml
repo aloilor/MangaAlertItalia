@@ -5,13 +5,13 @@ on:
       branches:
         - main
       paths:
-        - src/backend/scraper/**
+        - src/backend/manga-scraper/**
     
     pull_request:
       branches:
         - main
       paths:
-        - src/backend/scraper/**
+        - src/backend/manga-scraper/**
 
         
 jobs:
@@ -21,7 +21,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./src/backend/scraper
+        working-directory: ./src/backend/manga-scraper
     strategy:
       matrix:
         python-version: ["3.10.12"]
