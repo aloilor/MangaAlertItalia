@@ -230,19 +230,6 @@ class TestFileHandler:
                     mock_print.assert_called_with(f"Error saving the file /fake/path/chainsaw_man_planet_manga.txt: File write error")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 class TestPublisherScraper:
 
     @pytest.fixture
