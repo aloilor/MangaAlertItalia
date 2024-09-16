@@ -7,7 +7,7 @@
 ```
 manga_scraper/  
 ├── Dockerfile  
-├── requirements.txt  
+├── build_requirements.txt  
 ├── main.py 
 ├── manga_scraper_app.py     
 ├── models/  
@@ -18,8 +18,12 @@ manga_scraper/
 │   ├── publisher_scraper.py  
 │   ├── planet_manga_scraper.py  
 │   └── star_comics_scraper.py  
+├── tests/  
+│   ├── __init__.py  
+│   ├── test_manga_scraper.py  
+│   ├── tests_requirements.txt  
 └── utils/  
     ├── __init__.py  
     └── file_handler.py  
-    └── logging_config.py  
+    └── logging_config.py 
 ```

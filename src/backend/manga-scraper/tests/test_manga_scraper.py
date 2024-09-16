@@ -3,7 +3,12 @@ import requests
 import tempfile
 import os
 from unittest.mock import patch, mock_open, Mock
-from ..scraper import PublisherScraper, PlanetMangaScraper, StarComicsScraper, MangaRelease, FileHandler, MangaScraperApp
+from scrapers.publisher_scraper import PublisherScraper
+from scrapers.planet_manga_scraper import PlanetMangaScraper
+from scrapers.star_comics_scraper import StarComicsScraper
+from models.manga_release import MangaRelease
+from utils.file_handler import FileHandler
+from manga_scraper_app import MangaScraperApp
 
 # Test data for mocking
 planet_manga_valid_html = '''
