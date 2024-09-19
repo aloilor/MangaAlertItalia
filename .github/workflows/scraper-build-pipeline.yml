@@ -1,5 +1,10 @@
 name: Test and build Scraper
 
+env:
+  ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
+  AWS_REGION: ${{ secrets.AWS_REGION }} 
+  SCRAPER_ECR_REPOSITORY: ${{ secrets.SCRAPER_ECR_REPOSITORY }}
+
 on:
     push:
       branches:
@@ -13,7 +18,11 @@ on:
       paths:
         - src/backend/manga-scraper/**
 
-        
+permissions:
+  id-token: write
+  pull-requests: write
+  contents: read    # This is required for actions/checkout
+
 jobs:
   build:
     name: Run tests
@@ -30,7 +39,18 @@ jobs:
 
       - name: Checkout the repository to the runner 
         uses: actions/checkout@v4
-      
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: Build-GitHub
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -40,6 +60,7 @@ jobs:
         run: pip install -r ./tests/tests_requirements.txt
       
       - name: Run PyTests
+        id: pytest
         uses: pavelzw/pytest-action@v2
         with:
           verbose: true
@@ -47,3 +68,15 @@ jobs:
           job-summary: true
           click-to-expand: true
           report-title: 'Test Report'
+      
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+
