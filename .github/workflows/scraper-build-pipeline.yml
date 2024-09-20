@@ -5,8 +5,6 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }} 
   SCRAPER_ECR_REPOSITORY: ${{ secrets.SCRAPER_ECR_REPOSITORY }}
   
-
-
 on:
     push:
       branches:
@@ -47,7 +45,7 @@ jobs:
         with:
           role-to-assume: ${{ env.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: Build-GitHub
+          role-session-name: Manga-Scraper-Build-GitHub
 
       - name: Login to Amazon ECR
         id: login-ecr
