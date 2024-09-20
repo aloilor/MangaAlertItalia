@@ -4,7 +4,7 @@ env:
   ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
   AWS_REGION: ${{ secrets.AWS_REGION }} 
   SCRAPER_ECR_REPOSITORY: ${{ secrets.SCRAPER_ECR_REPOSITORY }}
-  IMAGE_TAG: "manga-scraper-image"
+  
 
 
 on:
@@ -75,6 +75,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: "manga-scraper-image"
         run: |
           docker build -t "$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG_$(date '+%Y-%m-%d_%H:%M:%S')" .
           docker push "$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG_$(date '+%Y-%m-%d_%H:%M:%S')"
