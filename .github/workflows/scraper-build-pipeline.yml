@@ -4,6 +4,8 @@ env:
   ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
   AWS_REGION: ${{ secrets.AWS_REGION }} 
   SCRAPER_ECR_REPOSITORY: ${{ secrets.SCRAPER_ECR_REPOSITORY }}
+  IMAGE_TAG: "manga-scraper-image"
+
 
 on:
     push:
@@ -25,7 +27,7 @@ permissions:
 
 jobs:
   build:
-    name: Run tests
+    name: Test, build and push 
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -73,11 +75,10 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: "manga-scraper-image"
         run: |
-          docker build -t $ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG .
-          docker push "$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG"
-          echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY"
-          echo "image_tag=$IMAGE_TAG" 
-          echo "full_image=$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG"
+          docker build -t $ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG-$(date '+%Y-%m-%d %H:%M:%S') .
+          docker push "$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG-$(date '+%Y-%m-%d %H:%M:%S')"
+          echo "IMAGE $IMAGE_TAG-$(date '+%Y-%m-%d %H:%M:%S') is pushed to $ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY"
+          echo "image_tag=$IMAGE_TAG-$(date '+%Y-%m-%d %H:%M:%S')" 
+          echo "full_image=$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG-$(date '+%Y-%m-%d %H:%M:%S')"
 
