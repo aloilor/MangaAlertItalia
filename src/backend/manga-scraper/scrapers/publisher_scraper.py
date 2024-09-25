@@ -13,7 +13,7 @@ class PublisherScraper:
             "Chrome/128.0.0.0 Safari/537.36"
         )
     }
-    timeout = 10
+    timeout = 30
 
     def __init__(self, manga: str, url: str):
         self.manga = manga
