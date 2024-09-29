@@ -1,5 +1,5 @@
 # Manga Scraper
-The Manga Scraper application is designed to scrape manga release data from different publishers and platforms. It is modular, enabling easy extension to include new publishers or platforms. The application is structured into scrapers, models, utilities, and tests, making it a scalable and maintainable project.
+The Manga Scraper module is designed to scrape manga release data from different publishers and platforms. It is modular, enabling easy extension to include new publishers or platforms. The application is structured into scrapers, models, utilities, and tests, making it a scalable and maintainable project.
 
 ## Directory Structure
 ```
