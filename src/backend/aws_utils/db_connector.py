@@ -54,8 +54,12 @@ class DatabaseConnector:
 
         with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, params)
+            
+            # Only populated if the query returns rows (SELECT)
             if cursor.description:
                 return cursor.fetchall()
+
+            # Query doesn't doesn't produce a result set (INSERT, UPDATE, DELETE)
             else:
                 self.connection.commit()
                 return None
