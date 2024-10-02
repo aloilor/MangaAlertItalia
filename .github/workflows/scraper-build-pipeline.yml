@@ -10,13 +10,13 @@ on:
       branches:
         - main
       paths:
-        - src/backend/manga-scraper/**
+        - src/backend/manga_scraper/**
     
     pull_request:
       branches:
         - main
       paths:
-        - src/backend/manga-scraper/**
+        - src/backend/manga_scraper/**
 
 permissions:
   id-token: write
@@ -30,7 +30,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./src/backend/manga-scraper
+        working-directory: ./src/backend/manga_scraper
     strategy:
       matrix:
         python-version: ["3.10.12"]

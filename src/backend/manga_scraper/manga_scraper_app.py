@@ -4,7 +4,7 @@ from scrapers.planet_manga_scraper import PlanetMangaScraper
 from scrapers.star_comics_scraper import StarComicsScraper
 from utils.file_handler import FileHandler
 
-from ..aws_utils.db_connector import DatabaseConnector
+from aws_utils.db_connector import DatabaseConnector
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,16 @@ class MangaScraperApp:
             )
         ]
 
+        self.secret_name = "rds!db-4a66914f-6981-4530-b0ee-679115c8aa8a"
+
+        self.db_connector = DatabaseConnector(self.secret_name)
+        
+
     def scrape_and_notify(self):
+
+        logger.info(f"Issuing RDS connection using secret {self.secret_name}...")
+        self.db_connector.connect()
+
         for scraper in self.scrapers:
             logger.info(f"Scraping {scraper.manga}...")
             params = {"q": scraper.manga} if isinstance(scraper, PlanetMangaScraper) else None
@@ -38,9 +47,13 @@ class MangaScraperApp:
 
             if manga_release:
                 logger.info(f"Found release: {manga_release}")
-                db_connector = DatabaseConnector("rds!db-4a66914f-6981-4530-b0ee-679115c8aa8a")
-                db_connector.connect()
-                db_connector.close()
                 #self.file_handler.save_response_to_file(scraper.manga, manga_release.publisher, response)
+
             else:
                 logger.warning(f"No release found for {scraper.manga}")
+        
+        logger.info(f"Closing RDS connection...")
+        self.db_connector.close()
+
+        return
+

@@ -96,12 +96,22 @@ resource "aws_security_group" "manga_alert_rds_sg" {
   description = "Security group for RDS PostgreSQL instance"
   vpc_id      = aws_vpc.vpc_manga_alert.id
 
+  # Allow access from ECS instances
   ingress {
     description     = "PostgreSQL access from ECS tasks"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.manga_alert_ecs_instances_sg.id]
+  }
+
+  # Allow access from your IP
+  ingress {
+    description = "PostgreSQL access from my IP"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
   }
 
   egress {
