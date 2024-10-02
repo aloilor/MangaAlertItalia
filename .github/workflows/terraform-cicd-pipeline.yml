@@ -1,0 +1,109 @@
+name: Terraform CI/CD pipeline
+
+env:
+  ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
+  AWS_REGION: ${{ secrets.AWS_REGION }} 
+
+  # S3 bucket for the Terraform state
+  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE}} 
+
+  # verbosity setting for Terraform logs
+  TF_LOG: INFO
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - infra/**
+
+
+  pull_request:
+    branches:
+    - main
+    paths:
+    - infra/**
+
+permissions:
+  id-token: write
+  pull-requests: write
+  contents: read    # This is required for actions/checkout
+
+jobs:
+  terraform:
+    name: Terraform pipeline
+    runs-on: ubuntu-latest    
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./infra
+
+    steps:
+
+      - name: Checkout the repository to the runner 
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: IAC-Terraform-GitHub
+      
+      - name: Setup Terraform with specified version on the runner
+        uses: hashicorp/setup-terraform@v3.1.2
+        with:
+          terraform_version: 1.9.5
+      
+      - name: Terraform init
+        id: init
+        run: terraform init -backend-config="bucket=$BUCKET_TF_STATE"
+      
+      - name: Terraform format
+        id: fmt
+        run: terraform fmt -check -diff
+    
+      - name: Terraform validate
+        id: val
+        run: terraform validate
+      
+      - name: Terraform plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.val.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+  
+            <details><summary>Show Plan</summary>
+  
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+  
+            </details>
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+  
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve -input=false

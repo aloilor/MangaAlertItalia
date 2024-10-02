@@ -5,8 +5,6 @@ from aws_utils.secrets_manager import AWSSecretsManagerClient
 from aws_utils.db_connector import DatabaseConnector
 
 
-
-
 SECRET_NAME = "my-secret"
 SECRET_STRING = '{"username": "admin", "password": "secret"}'
 SECRET_BINARY = b'\xDE\xAD\xBE\xEF'
@@ -70,6 +68,7 @@ class TestSecretsManager:
 
             assert f"Failed to retrieve secret '{SECRET_NAME}': AWS Error" == str(exc_info.value)
             mock_client.get_secret_value.assert_called_once_with(SecretId=SECRET_NAME)
+
 
 class TestDatabaseConnector:
 
