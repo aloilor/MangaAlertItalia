@@ -1,5 +1,5 @@
 from .publisher_scraper import PublisherScraper
-from models.manga_release import MangaRelease
+from manga_scraper.models.manga_release import MangaRelease
 from bs4 import BeautifulSoup
 import logging
 

@@ -30,7 +30,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./src/backend/manga_scraper
     strategy:
       matrix:
         python-version: ["3.10.12"]
@@ -57,8 +56,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       
       - name: Install dependencies
-        run: pip install -r ./tests/tests_requirements.txt
-      
+        run: pip install -r requirements.txt
+        working-directory: ./tests/
+
       - name: Run PyTests
         id: pytest
         uses: pavelzw/pytest-action@v2
@@ -75,9 +75,11 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: "manga-scraper-image-latest"
         run: |
-          docker build -t "$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG" .
+          docker build -t "$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG" -f Dockerfile.manga_scraper .
           docker push "$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG"
           echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG" 
           echo "full_image=$ECR_REGISTRY/$SCRAPER_ECR_REPOSITORY:$IMAGE_TAG"
+        working-directory: ./src/backend/
+
 

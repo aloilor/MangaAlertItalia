@@ -1,8 +1,8 @@
 import logging
 
-from scrapers.planet_manga_scraper import PlanetMangaScraper
-from scrapers.star_comics_scraper import StarComicsScraper
-from utils.file_handler import FileHandler
+from manga_scraper.scrapers.planet_manga_scraper import PlanetMangaScraper
+from manga_scraper.scrapers.star_comics_scraper import StarComicsScraper
+from manga_scraper.utils.file_handler import FileHandler
 
 from aws_utils.db_connector import DatabaseConnector
 

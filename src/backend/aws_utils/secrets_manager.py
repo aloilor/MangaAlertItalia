@@ -1,5 +1,8 @@
 import boto3
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AWSSecretsManagerClient:
     """
@@ -18,6 +21,8 @@ class AWSSecretsManagerClient:
             service_name='secretsmanager',
             region_name=self.region_name
         )
+        logger.debug("AWSSecretsManagerClient initialized for region: %s", self.region_name)
+
 
     def get_secret(self, secret_name):
         """
@@ -28,10 +33,13 @@ class AWSSecretsManagerClient:
         :raises Exception: If the secret cannot be retrieved.
         """
         try:
+            logger.debug("Attempting to retrieve secret: %s", secret_name)
             response = self.client.get_secret_value(SecretId=secret_name)
+            logger.info("Successfully retrieved secret: %s", secret_name)
         except Exception as e:
+            logger.error("Failed to retrieve secret '%s': %s", secret_name, e)
             raise Exception(f"Failed to retrieve secret '{secret_name}': {e}")
-        
+
         if 'SecretString' in response:
             return json.loads(response['SecretString'])
         else:

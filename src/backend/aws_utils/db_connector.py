@@ -1,6 +1,10 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from .secrets_manager import AWSSecretsManagerClient
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 class DatabaseConnector:
     """
@@ -21,6 +25,8 @@ class DatabaseConnector:
         self.dbname = dbname
         self.secrets_client = AWSSecretsManagerClient(region_name=self.region_name)
         self.connection = None
+        logger.debug("DatabaseConnector initialized with host: %s, dbname: %s, region: %s, port: %d", self.host, self.dbname, self.region_name, self.port)
+
 
     def connect(self):
         """
@@ -37,7 +43,9 @@ class DatabaseConnector:
                 user=credentials['username'],
                 password=credentials['password']
             )
+            logger.debug("Successfully connected to the database: %s", self.dbname)
         except Exception as e:
+            logger.error("Failed to connect to database: %s", e)
             raise Exception(f"Failed to connect to database: {e}")
 
     def execute_query(self, query, params=None):
@@ -50,24 +58,41 @@ class DatabaseConnector:
         :raises Exception: If the query fails to execute.
         """
         if not self.connection:
+            logger.debug("No active database connection found. Attempting to connect...")
             self.connect()
 
-        with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, params)
-            
-            # Only populated if the query returns rows (SELECT)
-            if cursor.description:
-                return cursor.fetchall()
+        try:
+            with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+                logger.debug("Executing query: %s with params: %s", query, params)
+                cursor.execute(query, params)
+                
+                # Only populated if the query returns rows (SELECT)
+                if cursor.description:
+                    results = cursor.fetchall()
+                    logger.debug("Query executed successfully, returning %d rows", len(results))
+                    return results
 
-            # Query doesn't doesn't produce a result set (INSERT, UPDATE, DELETE)
-            else:
-                self.connection.commit()
-                return None
+                # Query doesn't produce a result set (INSERT, UPDATE, DELETE)
+                else:
+                    self.connection.commit()
+                    logger.debug("Query executed successfully, no result set returned")
+                    return None
+                
+        except Exception as e:
+            logger.error("Failed to execute query: %s, error: %s", query, e)
+            raise Exception(f"Failed to execute query: {e}")
+
 
     def close(self):
         """
         Close the database connection.
         """
         if self.connection:
-            self.connection.close()
-            self.connection = None
+            try:
+                self.connection.close()
+                logger.debug("Database connection closed successfully.")
+            except Exception as e:
+                logger.error("Failed to close the database connection: %s", e)
+                raise Exception(f"Failed to close the database connection: {e}")
+            finally:
+                self.connection = None

@@ -1,5 +1,5 @@
-from utils.logging_config import setup_logging
-from manga_scraper_app import MangaScraperApp
+from manga_scraper.utils.logging_config import setup_logging
+from manga_scraper.manga_scraper_app import MangaScraperApp
 import logging
 
 logger = logging.getLogger(__name__)

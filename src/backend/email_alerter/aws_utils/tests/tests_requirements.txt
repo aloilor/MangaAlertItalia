@@ -1,7 +1,0 @@
-pytest==8.3.2
-requests==2.25.1
-beautifulsoup4==4.12.3
-pytest-md
-pytest-cov
-boto3==1.35.29
-psycopg2-binary==2.9.9
