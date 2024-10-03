@@ -111,6 +111,8 @@ resource "aws_iam_policy" "ecs_task_policy" {
         Action = [
           "dynamodb:*",
           "s3:*",
+          "secretsmanager:GetSecretValue",
+          "kms:Decrypt",
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
