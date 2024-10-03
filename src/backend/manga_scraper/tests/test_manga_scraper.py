@@ -3,12 +3,13 @@ import requests
 import tempfile
 import os
 from unittest.mock import patch, mock_open, Mock
-from scrapers.publisher_scraper import PublisherScraper
-from scrapers.planet_manga_scraper import PlanetMangaScraper
-from scrapers.star_comics_scraper import StarComicsScraper
-from models.manga_release import MangaRelease
-from utils.file_handler import FileHandler
-from manga_scraper_app import MangaScraperApp
+
+from manga_scraper.scrapers.publisher_scraper import PublisherScraper
+from manga_scraper.scrapers.planet_manga_scraper import PlanetMangaScraper
+from manga_scraper.scrapers.star_comics_scraper import StarComicsScraper
+from manga_scraper.models.manga_release import MangaRelease
+from manga_scraper.utils.file_handler import FileHandler
+from manga_scraper.manga_scraper_app import MangaScraperApp
 
 # Test data for mocking
 planet_manga_valid_html = '''
@@ -228,7 +229,7 @@ class TestFileHandler:
             with patch("builtins.open", mock_open()) as mock_file:
                 mock_file.side_effect = IOError("File write error")
             
-                with patch("utils.file_handler.logger") as mock_logger:
+                with patch("manga_scraper.utils.file_handler.logger") as mock_logger:
                     handler.save_response_to_file(manga, publisher, response)
 
                     mock_logger.error.assert_called_with(
@@ -300,7 +301,7 @@ class TestPlanetMangaScraper:
         """Test parse method with None HTML content"""
         scraper.scrape = Mock(return_value=None)
         
-        with patch("scrapers.planet_manga_scraper.logger") as mock_logger:
+        with patch("manga_scraper.scrapers.planet_manga_scraper.logger") as mock_logger:
             response = scraper.scrape()
             result = scraper.parse(response)            
             mock_logger.error.assert_called_with(
@@ -314,7 +315,7 @@ class TestPlanetMangaScraper:
         """Test parse method when no product item is found"""
         scraper.scrape = Mock(return_value=no_results_html)
         
-        with patch("scrapers.planet_manga_scraper.logger") as mock_logger:
+        with patch("manga_scraper.scrapers.planet_manga_scraper.logger") as mock_logger:
             response = scraper.scrape()
             result = scraper.parse(response)
             mock_logger.error.assert_called_with(
@@ -328,7 +329,7 @@ class TestPlanetMangaScraper:
         """Test parse method with missing title, link, and release date"""
         scraper.scrape = Mock(return_value=planet_manga_missing_html)
 
-        with patch("scrapers.planet_manga_scraper.logger") as mock_logger:
+        with patch("manga_scraper.scrapers.planet_manga_scraper.logger") as mock_logger:
             response = scraper.scrape()
             result = scraper.parse(response)
             mock_logger.error.assert_called_with(
@@ -371,7 +372,7 @@ class TestStarComicsScraper:
         """Test parse method with None HTML content"""
         scraper.scrape = Mock(return_value=None)
         
-        with patch("scrapers.star_comics_scraper.logger") as mock_logger:
+        with patch("manga_scraper.scrapers.star_comics_scraper.logger") as mock_logger:
             response = scraper.scrape()
             result = scraper.parse(response)            
             mock_logger.error.assert_called_with(
@@ -385,7 +386,7 @@ class TestStarComicsScraper:
         """Test parse method when no product item is found"""
         scraper.scrape = Mock(return_value=no_results_html)
         
-        with patch("scrapers.star_comics_scraper.logger") as mock_logger:
+        with patch("manga_scraper.scrapers.star_comics_scraper.logger") as mock_logger:
             response = scraper.scrape()
             result = scraper.parse(response)
             mock_logger.error.assert_called_with(
