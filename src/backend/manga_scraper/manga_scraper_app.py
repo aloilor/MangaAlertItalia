@@ -74,10 +74,10 @@ class MangaScraperApp:
 
         try:
             self.db_connector.execute_query(query, query_params)
-            logger.info("Inserted manga release: %s, release_date: %s", manga_release.title, manga_release.release_date)
+            logger.info("Inserted manga release: %s, release_date: %s\n", manga_release.title, manga_release.release_date)
 
         except Exception as e:
-            logger.error("Failed to insert manga release: %s, error: %s", manga_release.title, e)
+            logger.error("Failed to insert manga release: %s, error: %s\n", manga_release.title, e)
 
 
     def extract_volume_number(self, title):

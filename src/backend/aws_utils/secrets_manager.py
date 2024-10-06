@@ -35,7 +35,7 @@ class AWSSecretsManagerClient:
         try:
             logger.debug("Attempting to retrieve secret: %s", secret_name)
             response = self.client.get_secret_value(SecretId=secret_name)
-            logger.info("Successfully retrieved secret: %s", secret_name)
+            logger.debug("Successfully retrieved secret: %s", secret_name)
         except Exception as e:
             logger.error("Failed to retrieve secret '%s': %s", secret_name, e)
             raise Exception(f"Failed to retrieve secret '{secret_name}': {e}")

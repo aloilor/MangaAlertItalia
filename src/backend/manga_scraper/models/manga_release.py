@@ -14,5 +14,5 @@ class MangaRelease:
             f" link: {self.link},\n"
             f" release_date: {self.release_date},\n"
             f" publisher: {self.publisher}\n"
-            f")\n"
+            f")"
         )

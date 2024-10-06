@@ -187,7 +187,7 @@ class TestMangaRelease:
             " link: https://example.com/attack-on-titan-vol-1,\n"
             " release_date: 2023-10-01,\n"
             " publisher: Kodansha\n"
-            ")\n"
+            ")"
         )
         
         assert repr(manga) == expected_repr
