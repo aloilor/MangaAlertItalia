@@ -1,5 +1,7 @@
 import logging
+import re
 
+from datetime import datetime
 from manga_scraper.scrapers.planet_manga_scraper import PlanetMangaScraper
 from manga_scraper.scrapers.star_comics_scraper import StarComicsScraper
 from manga_scraper.utils.file_handler import FileHandler
@@ -35,7 +37,6 @@ class MangaScraperApp:
         
 
     def scrape_and_notify(self):
-
         logger.info(f"Issuing RDS connection using secret {self.secret_name}...")
         self.db_connector.connect()
 
@@ -48,6 +49,7 @@ class MangaScraperApp:
             if manga_release:
                 logger.info(f"Found release: {manga_release}")
                 #self.file_handler.save_response_to_file(scraper.manga, manga_release.publisher, response)
+                self.insert_manga_release_db(scraper.manga, manga_release)
 
             else:
                 logger.warning(f"No release found for {scraper.manga}")
@@ -56,4 +58,45 @@ class MangaScraperApp:
         self.db_connector.close()
 
         return
+
+
+    def insert_manga_release_db(self, manga_title, manga_release):
+        query = """
+        INSERT INTO manga_releases (manga_title, volume_number, release_date, publisher, alert_sent)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (manga_title, volume_number, release_date) DO NOTHING;
+        """
+
+        release_date = self.parse_release_date(manga_release.release_date)
+        volume_number = self.extract_volume_number(manga_release.title)
+
+        query_params = [manga_title, volume_number, release_date, manga_release.publisher, False]
+
+        try:
+            self.db_connector.execute_query(query, query_params)
+            logger.info("Inserted manga release: %s, release_date: %s", manga_release.title, manga_release.release_date)
+
+        except Exception as e:
+            logger.error("Failed to insert manga release: %s, error: %s", manga_release.title, e)
+
+
+    def extract_volume_number(self, title):
+        # This regex assumes the volume number is at the end of the title
+        match = re.search(r'(\d+)$', title)
+        if match:
+            return match.group(1)
+        else:
+            return 'Unknown' 
+
+
+    def parse_release_date(self, date_str):
+        # Handle Multiple Date Formats
+        for fmt in ('%d/%m/%Y', '%d/%m/%y'):
+            try:
+                return datetime.strptime(date_str, fmt).date()
+            except ValueError:
+                continue
+        raise ValueError(f"Date format for '{date_str}' is not supported.")
+
+
 

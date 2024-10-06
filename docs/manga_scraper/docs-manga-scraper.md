@@ -7,7 +7,7 @@ manga_scraper/
 ├── main.py                         # Entry point for the application that triggers the scraping process.
 ├── manga_scraper_app.py            # Contains the `MangaScraperApp` class, orchestrating the scraping and notification process.
 ├── requirements.txt                # Dependencies for the scraper application.
-
+│
 ├── models/                         # Defines models used in the application      
 │   └── manga_release.py            # Defines the `MangaRelease` class, representing the scraped manga release data.
 │

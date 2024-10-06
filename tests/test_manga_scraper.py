@@ -287,7 +287,7 @@ class TestPlanetMangaScraper:
             title = "Chainsaw Man 17",
             link = "https://www.panini.it/shp_ita_it/chainsaw-man-17-mmost027-it08.html",
             release_date = "19/09/24",
-            publisher = "planet_manga"
+            publisher = "planet manga"
         )
 
         assert result is not None
@@ -358,7 +358,7 @@ class TestStarComicsScraper:
             title = "SOLO LEVELING n. 18",
             link = "https://www.starcomics.com/fumetto/solo-leveling-18",
             release_date = "03/09/2024",
-            publisher = "star_comics"
+            publisher = "star comics"
         )
 
         assert result is not None
