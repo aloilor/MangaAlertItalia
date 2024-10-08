@@ -18,15 +18,15 @@ class MangaScraperApp:
 
         self.scrapers = [
             PlanetMangaScraper(
-                "jujutsu kaisen",
+                "Jujutsu Kaisen",
                 "https://www.panini.it/shp_ita_it/catalogsearch/result/?q=jujutsu+kaisen"
             ),
             PlanetMangaScraper(
-                "chainsaw man",
+                "Chainsaw Man",
                 "https://www.panini.it/shp_ita_it/catalogsearch/result/?q=chainsaw+man"
             ),
             StarComicsScraper(
-                "solo leveling",
+                "Solo Leveling",
                 "https://www.starcomics.com/titoli-fumetti/solo-leveling"
             )
         ]

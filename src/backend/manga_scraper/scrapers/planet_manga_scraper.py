@@ -26,7 +26,7 @@ class PlanetMangaScraper(PublisherScraper):
             release_date = date_elem.get_text(strip=True) if date_elem else ""
 
             if title and link and release_date:
-                return MangaRelease(title, link, release_date, "planet manga")
+                return MangaRelease(title, link, release_date, "Planet Manga")
             else:
                 logger.error(f"Missing data in response for '{self.manga}' from 'Planet Manga'")
                 return None

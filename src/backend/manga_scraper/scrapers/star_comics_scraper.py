@@ -30,7 +30,7 @@ class StarComicsScraper(PublisherScraper):
             release_date = date_elem.get_text(strip=True) if date_elem else ""
 
             if title and link and release_date:
-                return MangaRelease(title, link, release_date, "star comics")
+                return MangaRelease(title, link, release_date, "Star Comics")
             else:
                 logger.error(f"Missing data in response for '{self.manga}' from 'Star Comics'")
                 return None
