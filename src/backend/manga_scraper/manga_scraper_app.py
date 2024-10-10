@@ -38,7 +38,6 @@ class MangaScraperApp:
 
     def scrape_and_notify(self):
         logger.info(f"Issuing RDS connection using secret {self.secret_name}...")
-        self.db_connector.connect()
 
         for scraper in self.scrapers:
             logger.info(f"Scraping {scraper.manga}...")
@@ -62,15 +61,15 @@ class MangaScraperApp:
 
     def insert_manga_release_db(self, manga_title, manga_release):
         query = """
-        INSERT INTO manga_releases (manga_title, volume_number, release_date, publisher, alert_sent)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO manga_releases (manga_title, volume_number, release_date, publisher, page_link, alert_sent)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (manga_title, volume_number, release_date) DO NOTHING;
         """
 
         release_date = self.parse_release_date(manga_release.release_date)
         volume_number = self.extract_volume_number(manga_release.title)
 
-        query_params = [manga_title, volume_number, release_date, manga_release.publisher, False]
+        query_params = [manga_title, volume_number, release_date, manga_release.publisher, manga_release.link, False]
 
         try:
             self.db_connector.execute_query(query, query_params)
@@ -85,6 +84,7 @@ class MangaScraperApp:
         match = re.search(r'(\d+)$', title)
         if match:
             return match.group(1)
+
         else:
             return 'Unknown' 
 
@@ -94,8 +94,10 @@ class MangaScraperApp:
         for fmt in ('%d/%m/%Y', '%d/%m/%y'):
             try:
                 return datetime.strptime(date_str, fmt).date()
+
             except ValueError:
                 continue
+
         raise ValueError(f"Date format for '{date_str}' is not supported.")
 
 

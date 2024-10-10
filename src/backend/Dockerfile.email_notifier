@@ -1,0 +1,11 @@
+FROM python:3.10.12-slim
+
+WORKDIR /app
+
+COPY ./email_notifier ./email_notifier
+
+COPY ./aws_utils ./aws_utils
+
+RUN pip install --no-cache-dir -r ./email_notifier/requirements.txt
+
+CMD ["python3", "-m", "email_notifier.main"]

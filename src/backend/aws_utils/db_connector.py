@@ -11,13 +11,14 @@ class DatabaseConnector:
     A connector for PostgreSQL databases using credentials from AWS Secrets Manager.
     """
 
-    def __init__(self, secret_name, host="manga-alert-pgsql-db.c9oy46eeqq9b.eu-west-1.rds.amazonaws.com", dbname="manga_alert_pgsql_db", region_name="eu-west-1", port=5432):
+    def __init__(self, secret_name="rds!db-4a66914f-6981-4530-b0ee-679115c8aa8a", host="manga-alert-pgsql-db.c9oy46eeqq9b.eu-west-1.rds.amazonaws.com", dbname="manga_alert_pgsql_db", region_name="eu-west-1", port=5432):
         """
         Initialize the Database Connector.
 
         :param secret_name: The name of the secret in AWS Secrets Manager.
         :param region_name: AWS region name. If None, uses the default region.
         """
+
         self.secret_name = secret_name
         self.region_name = region_name
         self.host = host
@@ -34,6 +35,7 @@ class DatabaseConnector:
 
         :raises Exception: If the connection cannot be established.
         """
+
         try:
             credentials = self.secrets_client.get_secret(self.secret_name)
             self.connection = psycopg2.connect(
@@ -57,6 +59,7 @@ class DatabaseConnector:
         :return: Query results as a list of dictionaries.
         :raises Exception: If the query fails to execute.
         """
+
         if not self.connection:
             logger.debug("No active database connection found. Attempting to connect...")
             self.connect()
@@ -87,6 +90,7 @@ class DatabaseConnector:
         """
         Close the database connection.
         """
+        
         if self.connection:
             try:
                 self.connection.close()
