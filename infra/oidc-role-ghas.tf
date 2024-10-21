@@ -43,7 +43,8 @@ resource "aws_iam_role" "github_actions_role" {
     "arn:aws:iam::aws:policy/IAMFullAccess",
     "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess",
     "arn:aws:iam::aws:policy/AmazonECS_FullAccess",
-    "arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess"
+    "arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess",
+    "arn:aws:iam::aws:policy/AmazonSESFullAccess"
   ]
   max_session_duration  = 3600
   force_detach_policies = false
