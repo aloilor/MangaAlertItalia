@@ -1,6 +1,6 @@
 import logging
 
-from email_notifier.utils.logging_config import setup_logging
+from common_utils.logging_config import setup_logging
 from email_notifier.email_notifier_app import EmailNotifier
 
 

@@ -6,6 +6,8 @@ COPY ./email_notifier ./email_notifier
 
 COPY ./aws_utils ./aws_utils
 
+COPY ./common_utils ./common_utils
+
 RUN pip install --no-cache-dir -r ./email_notifier/requirements.txt
 
 CMD ["python3", "-m", "email_notifier.main"]

@@ -27,7 +27,7 @@ class EmailNotifier:
         logger.debug("EmailNotifier initialized.")
 
     
-    def fetch_upcoming_releases(self, days_ahead=7):
+    def fetch_upcoming_releases(self, days_ahead=None):
         """
         Fetch upcoming manga releases within the next 'days_ahead' days.
 
@@ -35,21 +35,24 @@ class EmailNotifier:
         :return: List of upcoming manga releases.
         """
 
-        try:
-            # ---- Query for integration tests ---- 
-            # query = """
-            #     SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher, mr.page_link
-            #     FROM manga_releases mr
-            #     WHERE mr.release_date > CURRENT_DATE 
-            # """
-            # params = []
+        try:   
 
-            query = """
-                SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher
-                FROM manga_releases mr
-                WHERE mr.release_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL %s
-            """
-            params = [f'{days_ahead} days']
+            if (days_ahead):
+                # ---- Query for integration tests: sends email alerts for all the upcoming releases, not filtering them by days_ahead ---- 
+                query = """
+                    SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher, mr.page_link
+                    FROM manga_releases mr
+                    WHERE mr.release_date > CURRENT_DATE 
+                """
+                params = []
+            
+            else:
+                query = """
+                    SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher
+                    FROM manga_releases mr
+                    WHERE mr.release_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL %s
+                """
+                params = [f'{days_ahead} days']
 
             results = self.db_connector.execute_query(query, params)
             logger.debug("Fetched %d upcoming releases.", len(results))
@@ -225,7 +228,7 @@ class EmailNotifier:
             raise
 
     
-
+    # Probably to include in the main_backend, when sending a "succesful subscription" to new subscribers, to notify them of the upcoming releases
     def fetch_latest_manga_release(self, manga_title):
         """
         Fetch the latest manga release for a given manga title.

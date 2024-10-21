@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from aws_utils.db_connector import DatabaseConnector
-from main_backend.logging_config import setup_logging
+from common_utils.logging_config import setup_logging
 
 import logging
 
