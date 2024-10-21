@@ -1,10 +1,14 @@
 import pytest
 from unittest.mock import patch, mock_open, Mock, MagicMock
 from psycopg.rows import dict_row
+from botocore.exceptions import ClientError
+
 
 
 from aws_utils.secrets_manager import AWSSecretsManagerClient
 from aws_utils.db_connector import DatabaseConnector
+from aws_utils.ses_email_manager import SESEmailManager
+
 
 
 SECRET_NAME = "my-secret"
@@ -194,6 +198,75 @@ class TestDatabaseConnector:
         db_connector.close()
         
         mock_connection.close.assert_called_once()
+
+
+class TestSESEmailManager:
+    @pytest.fixture
+    def ses_email_manager(self):
+        """
+        Fixture to create an instance of SESEmailManager with a mocked boto3 SES client.
+        """
+        with patch('aws_utils.ses_email_manager.boto3.client') as mock_boto_client:
+            mock_ses_client = MagicMock()
+            mock_boto_client.return_value = mock_ses_client
+            manager = SESEmailManager(sender_email='sender@example.com', region_name='eu-west-1')
+            yield manager, mock_ses_client
+
+
+    def test_send_email_success(self, ses_email_manager):
+        """
+        Test that send_email successfully sends an email when SES does not raise an exception.
+        """
+        manager, mock_ses_client = ses_email_manager
+
+        # Test data
+        recipient_email = 'recipient@example.com'
+        subject = 'Test Subject'
+        body_text = 'This is a test email.'
+        body_html = '<p>This is a test email.</p>'
+
+        manager.send_email(recipient_email, subject, body_text, body_html)
+
+        mock_ses_client.send_email.assert_called_once_with(
+            Source='sender@example.com',
+            Destination={'ToAddresses': [recipient_email]},
+            Message={
+                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+                'Body': {
+                    'Text': {'Data': body_text, 'Charset': 'UTF-8'},
+                    'Html': {'Data': body_html, 'Charset': 'UTF-8'}
+                }
+            }
+        )
+    
+
+    def test_send_email_failure(self, ses_email_manager):
+        """
+        Test that send_email raises an exception when SES send_email fails.
+        """
+        manager, mock_ses_client = ses_email_manager
+
+        # Mock SES send_email to raise ClientError
+        error_response = {
+            'Error': {
+                'Code': 'MessageRejected',
+                'Message': 'Email address is not verified.'
+            }
+        }
+        mock_ses_client.send_email.side_effect = ClientError(error_response, 'send_email')
+
+        # Test data
+        recipient_email = 'unverified@example.com'
+        subject = 'Test Subject'
+        body_text = 'This is a test email.'
+
+        with pytest.raises(ClientError) as exc_info:
+            manager.send_email(recipient_email, subject, body_text)
+
+        assert exc_info.value.response['Error']['Code'] == 'MessageRejected'
+        assert exc_info.value.response['Error']['Message'] == 'Email address is not verified.'
+
+
 
 
         
