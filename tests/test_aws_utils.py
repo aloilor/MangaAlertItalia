@@ -1,5 +1,7 @@
 import pytest
 from unittest.mock import patch, mock_open, Mock, MagicMock
+from psycopg.rows import dict_row
+
 
 from aws_utils.secrets_manager import AWSSecretsManagerClient
 from aws_utils.db_connector import DatabaseConnector
@@ -80,15 +82,15 @@ class TestDatabaseConnector:
             yield mock_secrets_client
 
     @pytest.fixture
-    def mock_psycopg2_connect(self):
-        with patch('psycopg2.connect') as mock_connect:
+    def mock_psycopg_connect(self):
+        with patch('psycopg.connect') as mock_connect:
             mock_connection = MagicMock()
             mock_connect.return_value = mock_connection
             yield mock_connect, mock_connection
 
 
-    def test_connect(self, mock_secrets_manager, mock_psycopg2_connect):
-        mock_connect, _ = mock_psycopg2_connect
+    def test_connect(self, mock_secrets_manager, mock_psycopg_connect):
+        mock_connect, _ = mock_psycopg_connect
 
         db_connector = DatabaseConnector(
             secret_name=SECRET_NAME,
@@ -103,13 +105,14 @@ class TestDatabaseConnector:
         mock_connect.assert_called_once_with(
             host=HOST,
             port=PORT,
-            database=DBNAME,
+            dbname=DBNAME,
             user=MOCK_CREDENTIALS['username'],
-            password=MOCK_CREDENTIALS['password']
+            password=MOCK_CREDENTIALS['password'],
+            row_factory=dict_row
         )
 
-    def test_execute_query_with_results(self, mock_secrets_manager, mock_psycopg2_connect):
-        _, mock_connection = mock_psycopg2_connect
+    def test_execute_query_with_results(self, mock_secrets_manager, mock_psycopg_connect):
+        _, mock_connection = mock_psycopg_connect
         mock_cursor = MagicMock()
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
 
@@ -129,12 +132,12 @@ class TestDatabaseConnector:
         query = "SELECT * FROM test_table;"
         result = db_connector.execute_query(query)
 
-        mock_cursor.execute.assert_called_once_with(query, None)
+        mock_cursor.execute.assert_called_once_with(query, None, prepare=True)
         mock_cursor.fetchall.assert_called_once()
         assert result == [{'column1': 'value1', 'column2': 'value2'}]
 
-    def test_execute_query_without_results(self, mock_secrets_manager, mock_psycopg2_connect):
-        _, mock_connection = mock_psycopg2_connect
+    def test_execute_query_without_results(self, mock_secrets_manager, mock_psycopg_connect):
+        _, mock_connection = mock_psycopg_connect
         mock_cursor = MagicMock()
         mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
 
@@ -154,7 +157,7 @@ class TestDatabaseConnector:
         params = ('value1',)
         result = db_connector.execute_query(query, params)
 
-        mock_cursor.execute.assert_called_once_with(query, params)
+        mock_cursor.execute.assert_called_once_with(query, params, prepare=True)
         mock_connection.commit.assert_called_once()
         assert result is None
 
@@ -176,8 +179,8 @@ class TestDatabaseConnector:
 
             assert "Failed to connect to database: Failed to retrieve secret" in str(exc_info.value)
 
-    def test_close_connection(self, mock_secrets_manager, mock_psycopg2_connect):
-        _, mock_connection = mock_psycopg2_connect
+    def test_close_connection(self, mock_secrets_manager, mock_psycopg_connect):
+        _, mock_connection = mock_psycopg_connect
 
         db_connector = DatabaseConnector(
             secret_name=SECRET_NAME,

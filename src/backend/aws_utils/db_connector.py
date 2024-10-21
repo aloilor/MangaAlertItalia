@@ -1,5 +1,5 @@
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
+from psycopg.rows import dict_row
 from .secrets_manager import AWSSecretsManagerClient
 import logging
 
@@ -38,12 +38,13 @@ class DatabaseConnector:
 
         try:
             credentials = self.secrets_client.get_secret(self.secret_name)
-            self.connection = psycopg2.connect(
+            self.connection = psycopg.connect(
                 host=self.host,
                 port=self.port,
-                database=self.dbname,
+                dbname=self.dbname,
                 user=credentials['username'],
-                password=credentials['password']
+                password=credentials['password'],
+                row_factory=dict_row
             )
             logger.debug("Successfully connected to the database: %s", self.dbname)
         except Exception as e:
@@ -65,9 +66,9 @@ class DatabaseConnector:
             self.connect()
 
         try:
-            with self.connection.cursor(cursor_factory=RealDictCursor) as cursor:
+            with self.connection.cursor() as cursor:
                 logger.debug("Executing query: %s with params: %s", query, params)
-                cursor.execute(query, params)
+                cursor.execute(query, params, prepare=True)
                 
                 # Only populated if the query returns rows (SELECT)
                 if cursor.description:

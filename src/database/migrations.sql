@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS subscribers (
 -- Create map subscribers to their subscriptions
 CREATE TABLE IF NOT EXISTS subscribers_subscriptions (
     subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
-    email_address VARCHAR(255) NOT NULL UNIQUE,
+    email_address VARCHAR(255) NOT NULL,
     manga_title VARCHAR(255) NOT NULL,
     PRIMARY KEY (subscriber_id, manga_title)
 );

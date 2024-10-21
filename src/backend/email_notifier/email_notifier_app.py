@@ -36,19 +36,21 @@ class EmailNotifier:
         """
 
         try:
+            # ---- Query for integration tests ---- 
             # query = """
-            #     SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher
+            #     SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher, mr.page_link
             #     FROM manga_releases mr
-            #     WHERE mr.release_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL %s
+            #     WHERE mr.release_date > CURRENT_DATE 
             # """
-            # params = [f'{days_ahead} days']
+            # params = []
 
             query = """
-                SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher, mr.page_link
+                SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher
                 FROM manga_releases mr
-                WHERE mr.release_date > CURRENT_DATE 
+                WHERE mr.release_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL %s
             """
-            params = []
+            params = [f'{days_ahead} days']
+
             results = self.db_connector.execute_query(query, params)
             logger.debug("Fetched %d upcoming releases.", len(results))
             return results
@@ -101,7 +103,7 @@ class EmailNotifier:
             """
             params = [subscriber_id, manga_release_id, alert_type]
             self.db_connector.execute_query(query, params)
-            logger.info(
+            logger.debug(
                 "Marked alert '%s' as sent for subscriber_id: %s, manga_release_id: %s",
                 alert_type, subscriber_id, manga_release_id
             )
@@ -164,8 +166,6 @@ class EmailNotifier:
 
                 upcoming_releases = self.fetch_upcoming_releases(days_ahead=days_before)
 
-                print(upcoming_releases)
-
                 for release in upcoming_releases:
                     manga_release_id = release['id']
                     manga_title = release['manga_title']
@@ -176,16 +176,13 @@ class EmailNotifier:
 
                     subscribers = self.fetch_subscribers_for_manga(manga_title)
 
-                    print(subscribers)
-
                     for subscriber in subscribers:
                         subscriber_id = subscriber['id']
                         email_address = subscriber['email_address']
 
-                        print(subscriber)
-
                         # Check if the alert has already been sent
                         if self.alert_already_sent(subscriber_id, manga_release_id, alert_type):
+                            logger.info("Alert '%s' already sent to '%s' for manga_id '%s'", alert_type, email_address, manga_release_id)
                             continue
 
                         # Prepare and send the email

@@ -2,7 +2,7 @@ import pytest
 import requests
 import tempfile
 import os
-from unittest.mock import patch, mock_open, Mock
+from unittest.mock import patch, mock_open, Mock, MagicMock
 
 from manga_scraper.scrapers.publisher_scraper import PublisherScraper
 from manga_scraper.scrapers.planet_manga_scraper import PlanetMangaScraper
@@ -10,6 +10,9 @@ from manga_scraper.scrapers.star_comics_scraper import StarComicsScraper
 from manga_scraper.models.manga_release import MangaRelease
 from manga_scraper.utils.file_handler import FileHandler
 from manga_scraper.manga_scraper_app import MangaScraperApp
+
+from datetime import datetime
+
 
 # Test data for mocking
 planet_manga_valid_html = '''
@@ -404,5 +407,142 @@ class TestStarComicsScraper:
 
         assert result is None
     
+    
+
+class TestMangaScraperApp:
+
+    @pytest.fixture
+    def mock_db_connector(self):
+        with patch('manga_scraper.manga_scraper_app.DatabaseConnector') as mock_db:
+            yield mock_db.return_value
+
+    @pytest.fixture
+    def mock_planet_scraper(self):
+        with patch('manga_scraper.manga_scraper_app.PlanetMangaScraper') as mock_scraper:
+            yield mock_scraper
+
+    @pytest.fixture
+    def mock_star_scraper(self):
+        with patch('manga_scraper.manga_scraper_app.StarComicsScraper') as mock_scraper:
+            yield mock_scraper
+
+    @pytest.fixture
+    def app_instance(self, mock_db_connector):
+        # Initialize the app
+        app = MangaScraperApp()
+
+        # Mock scrapers
+        mock_planet_manga_scraper_instance = MagicMock(spec=PlanetMangaScraper)
+        mock_star_comics_scraper_instance = MagicMock(spec=StarComicsScraper)
+
+        # Assign mock instances to the scrapers list
+        app.scrapers = [mock_planet_manga_scraper_instance, mock_star_comics_scraper_instance]
+
+        return app, mock_planet_manga_scraper_instance, mock_star_comics_scraper_instance
 
 
+    def test_scrape_and_notify(self, app_instance):
+
+        app, mock_planet_manga_scraper_instance, mock_star_comics_scraper_instance = app_instance
+
+        mock_planet_manga_scraper_instance.manga = "Mock Manga"
+        mock_planet_manga_scraper_instance.scrape.return_value = 'mock_response_planet_manga'
+        mock_planet_manga_scraper_instance.parse.return_value = MagicMock(
+            title='Manga Title 1',
+            release_date='01/01/2024',
+            publisher='Planet Manga',
+            link='http://example.com/manga1'
+        )
+
+        mock_star_comics_scraper_instance.manga = "Mock Manga"
+        mock_star_comics_scraper_instance.scrape.return_value = 'mock_response_star_comics'
+        mock_star_comics_scraper_instance.parse.return_value = None 
+
+        with patch.object(app, 'insert_manga_release_db') as mock_insert:
+            app.scrape_and_notify()
+
+            mock_planet_manga_scraper_instance.scrape.assert_called_once()
+            mock_planet_manga_scraper_instance.parse.assert_called_once()
+        
+            mock_star_comics_scraper_instance.scrape.assert_called_once()
+            mock_planet_manga_scraper_instance.parse.assert_called_once()
+
+            mock_insert.assert_called_once_with(
+                mock_planet_manga_scraper_instance.manga, mock_planet_manga_scraper_instance.parse.return_value
+            )
+            
+            app.db_connector.close.assert_called_once()
+
+
+    def test_insert_manga_release_db(self, app_instance):
+        app, _, _ = app_instance
+
+        # Mock the db_connector.execute_query method
+        app.db_connector.execute_query = MagicMock()
+
+        # Create a mock manga_release object
+        manga_release = MagicMock(
+            title='Manga Title 15',
+            release_date='15/08/2024',
+            publisher='Planet Manga',
+            link='http://example.com/manga15'
+        )
+
+        app.insert_manga_release_db('Manga Title', manga_release)
+
+        expected_query = """
+        INSERT INTO manga_releases (manga_title, volume_number, release_date, publisher, page_link, alert_sent)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (manga_title, volume_number, release_date) DO NOTHING;
+        """
+        expected_release_date = app.parse_release_date(manga_release.release_date)
+        expected_volume_number = app.extract_volume_number(manga_release.title)
+        expected_params = [
+            'Manga Title',
+            expected_volume_number,
+            expected_release_date,
+            manga_release.publisher,
+            manga_release.link,
+            False
+        ]
+
+        app.db_connector.execute_query.assert_called_once_with(expected_query, expected_params)
+
+
+    @pytest.mark.parametrize("title, expected_volume", [
+        ('Manga Title Vol. 10', '10'),
+        ('Manga Title Volume 12', '12'),
+        ('Manga Title 15', '15'),
+        ('Manga Title', 'Unknown'),
+        ('Manga Title Vol. X', 'Unknown'),
+    ])
+    def test_extract_volume_number(self, app_instance, title, expected_volume):
+        """
+        Test extract_volume_number with various title formats.
+        """
+        app, _, _ = app_instance
+        volume_number = app.extract_volume_number(title)
+        assert volume_number == expected_volume
+
+
+    @pytest.mark.parametrize("date_str, expected_date", [
+        ('01/01/2024', datetime(2024, 1, 1).date()),
+        ('31/12/23', datetime(2023, 12, 31).date()),
+    ])
+    def test_parse_release_date_valid(self, app_instance, date_str, expected_date):
+        """
+        Test parse_release_date with valid date formats.
+        """
+        app, _, _ = app_instance
+        parsed_date = app.parse_release_date(date_str)
+        assert parsed_date == expected_date
+
+
+    def test_parse_release_date_invalid(self, app_instance):
+        """
+        Test parse_release_date with an unsupported date format.
+        """
+        app, _, _ = app_instance
+        with pytest.raises(ValueError) as excinfo:
+            app.parse_release_date('Invalid Date')
+        assert "Date format for 'Invalid Date' is not supported." in str(excinfo.value)
