@@ -37,7 +37,7 @@ class EmailNotifier:
 
         try:   
 
-            if (days_ahead):
+            if days_ahead is None:
                 # ---- Query for integration tests: sends email alerts for all the upcoming releases, not filtering them by days_ahead ---- 
                 query = """
                     SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher, mr.page_link
@@ -190,14 +190,14 @@ class EmailNotifier:
 
                         # Prepare and send the email
                         subject = f"Prossima Uscita: {manga_title} Vol. {volume_number} tra {days_before} giorni"
-                        body_text = f"""Ciao,
-
+                        body_text = f"""
+                        
+                        Ciao,
                         Il manga '{manga_title}' Vol. {volume_number} sarà disponibile il {release_date.strftime('%d/%m/%Y')}.
 
                         Casa editrice: {publisher}
                         Link per l'acquisto: {link}
                     
-
                         Grazie per aver utilizzato il nostro servizio.
 
                         Cordiali saluti,
