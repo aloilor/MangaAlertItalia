@@ -1,4 +1,4 @@
-name: Test and build Scraper
+name: Test and build Email Notifier
 
 env:
   ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
