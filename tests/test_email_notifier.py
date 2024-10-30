@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, mock_open, Mock, MagicMock
 from psycopg.rows import dict_row
+from datetime import datetime
 
 
 from email_notifier.email_notifier_app import EmailNotifier
@@ -164,6 +165,47 @@ class TestEmailNotifier:
 
         mock_db_connector.execute_query.assert_called_once()
         assert result is True  
+
+
+    def test_send_alerts(self, email_notifier, mock_db_connector, mock_ses_email_manager):
+        """
+        Test that send_alerts sends emails and marks alerts as sent.
+        """
+        # Mock database responses
+        # Set up side effects for execute_query calls
+        def execute_query_side_effect(*args, **kwargs):
+            query = args[0]
+            if 'SELECT mr.id, mr.manga_title' in query:
+                # fetch_upcoming_releases
+                return [
+                    {'id': 1, 'manga_title': 'Manga A', 'volume_number': '1', 'release_date': datetime.strptime("09/19/22", '%m/%d/%y'), 'publisher': 'Publisher A', 'page_link': 'http://example.com/manga-a'}
+                ]
+            
+            elif 'SELECT s.id, s.email_address' in query:
+                # fetch_subscribers_for_manga
+                return [
+                    {'id': 1, 'email_address': 'user@example.com'}
+                ]
+            
+            elif 'SELECT alert_sent' in query:
+                # alert_already_sent
+                return []  # No alert sent yet
+            
+            elif 'INSERT INTO alerts_sent' in query:
+                # mark_alert_sent
+                return None
+            
+            else:
+                return []
+
+        mock_db_connector.execute_query.side_effect = execute_query_side_effect
+
+        mock_ses_email_manager.send_email.return_value = None
+
+        email_notifier.send_alerts()
+
+        assert mock_ses_email_manager.send_email.called
+        assert mock_db_connector.execute_query.call_count >= 1
 
 
 

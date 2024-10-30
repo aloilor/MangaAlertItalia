@@ -56,6 +56,7 @@ class EmailNotifier:
 
             results = self.db_connector.execute_query(query, params)
             logger.debug("Fetched %d upcoming releases.", len(results))
+            print(results)
             return results
         
         except Exception as e:
@@ -160,7 +161,8 @@ class EmailNotifier:
             alert_schedules = [
                 {'alert_type': '1_month', 'days_before': 30},
                 {'alert_type': '1_week', 'days_before': 7},
-                {'alert_type': '1_day', 'days_before': 1}
+                {'alert_type': '1_day', 'days_before': 1},
+                {'alert_type': '1_day', 'days_before': None}
             ]
 
             for schedule in alert_schedules:
