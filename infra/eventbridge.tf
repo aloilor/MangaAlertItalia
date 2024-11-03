@@ -83,7 +83,7 @@ resource "aws_cloudwatch_event_target" "main_manga_alert_scraper_every_6_hours" 
 resource "aws_cloudwatch_event_rule" "manga_alert_notifier_cron_six_hours" {
   name                = "manga-alert-notifier-cron-six-hours"
   description         = "Schedule trigger to run the Manga Alert Notifier every 6 hours"
-  schedule_expression = "rate(2 minutes)"
+  schedule_expression = "rate(6 hours)"
 }
 
 resource "aws_cloudwatch_event_target" "main_manga_alert_notifier_every_6_hours" {

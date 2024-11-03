@@ -48,7 +48,6 @@ class EmailNotifier:
 
             results = self.db_connector.execute_query(query, params)
             logger.debug("Fetched %d upcoming releases.", len(results))
-            print(results)
             return results
         
         except Exception as e:
