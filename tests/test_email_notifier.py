@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, mock_open, Mock, MagicMock
 from psycopg.rows import dict_row
-from datetime import datetime
+from datetime import date
 
 
 from email_notifier.email_notifier_app import EmailNotifier
@@ -178,7 +178,7 @@ class TestEmailNotifier:
             if 'SELECT mr.id, mr.manga_title' in query:
                 # fetch_upcoming_releases
                 return [
-                    {'id': 1, 'manga_title': 'Manga A', 'volume_number': '1', 'release_date': datetime.strptime("09/19/22", '%m/%d/%y'), 'publisher': 'Publisher A', 'page_link': 'http://example.com/manga-a'}
+                    {'id': 1, 'manga_title': 'Manga A', 'volume_number': '1', 'release_date': date.fromisoformat("2022-09-19"), 'publisher': 'Publisher A', 'page_link': 'http://example.com/manga-a'}
                 ]
             
             elif 'SELECT s.id, s.email_address' in query:

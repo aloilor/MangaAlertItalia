@@ -211,6 +211,8 @@ resource "aws_ecs_cluster_capacity_providers" "manga_alert_ecs_cluster_capacity_
   }
 }
 
+
+#### SCRAPER TASK DEFINITION
 resource "aws_ecs_task_definition" "manga_alert_scraper_ecs_definition" {
   family                   = "manga-alert-ecs-scraper"
   network_mode             = "bridge"
@@ -253,4 +255,47 @@ resource "aws_ecs_task_definition" "manga_alert_scraper_ecs_definition" {
   ])
 }
 
+
+#### NOTIFIER TASK DEFINITION
+resource "aws_ecs_task_definition" "manga_alert_notifier_ecs_definition" {
+  family                   = "manga-alert-ecs-notifier"
+  network_mode             = "bridge"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  cpu                      = 256
+  memory                   = 512
+  requires_compatibilities = ["EC2"]
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+
+  container_definitions = jsonencode([
+    {
+      name      = "manga-alert-notifier"
+      image     = "${aws_ecr_repository.email_notifier_image.repository_url}:email-notifier-image-latest"
+      cpu       = 128
+      memory    = 256
+      essential = true
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-create-group  = "true",
+          awslogs-region        = "eu-west-1"
+          awslogs-group         = "manga-alert-app-notifier-logs"
+          awslogs-stream-prefix = "manga-alert-app-stream-logs"
+        }
+      }
+
+      environment = [
+        {
+          name  = "ECS_AVAILABLE_LOGGING_DRIVERS"
+          value = "json-file, awslogs"
+        }
+      ]
+    }
+  ])
+}
 

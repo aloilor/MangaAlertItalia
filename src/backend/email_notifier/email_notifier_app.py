@@ -1,8 +1,11 @@
 import logging
+import textwrap
 
 
 from aws_utils.ses_email_manager import SESEmailManager
 from aws_utils.db_connector import DatabaseConnector
+from datetime import date
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,23 +39,12 @@ class EmailNotifier:
         """
 
         try:   
-
-            if days_ahead is None:
-                # ---- Query for integration tests: sends email alerts for all the upcoming releases, not filtering them by days_ahead ---- 
-                query = """
-                    SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher, mr.page_link
-                    FROM manga_releases mr
-                    WHERE mr.release_date > CURRENT_DATE 
-                """
-                params = []
-            
-            else:
-                query = """
-                    SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher
-                    FROM manga_releases mr
-                    WHERE mr.release_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL %s
-                """
-                params = [f'{days_ahead} days']
+            query = """
+                SELECT mr.id, mr.manga_title, mr.volume_number, mr.release_date, mr.publisher, mr.page_link
+                FROM manga_releases mr
+                WHERE mr.release_date BETWEEN CURRENT_DATE AND CURRENT_DATE + (%s * INTERVAL '1 day')
+            """
+            params = [days_ahead]
 
             results = self.db_connector.execute_query(query, params)
             logger.debug("Fetched %d upcoming releases.", len(results))
@@ -162,14 +154,13 @@ class EmailNotifier:
                 {'alert_type': '1_month', 'days_before': 30},
                 {'alert_type': '1_week', 'days_before': 7},
                 {'alert_type': '1_day', 'days_before': 1},
-                {'alert_type': '1_day', 'days_before': None}
             ]
 
             for schedule in alert_schedules:
                 alert_type = schedule['alert_type']
                 days_before = schedule['days_before']
 
-                upcoming_releases = self.fetch_upcoming_releases(days_ahead=days_before)
+                upcoming_releases = self.fetch_upcoming_releases(days_before)
 
                 for release in upcoming_releases:
                     manga_release_id = release['id']
@@ -178,6 +169,8 @@ class EmailNotifier:
                     release_date = release['release_date']
                     publisher = release['publisher']
                     link = release['page_link']
+
+                    days_ahead = (release_date - date.today()).days
 
                     subscribers = self.fetch_subscribers_for_manga(manga_title)
 
@@ -191,22 +184,20 @@ class EmailNotifier:
                             continue
 
                         # Prepare and send the email
-                        subject = f"Prossima Uscita: {manga_title} Vol. {volume_number} tra {days_before} giorni"
-                        body_text = f"""
-                        
-                        Ciao,
-                        Il manga '{manga_title}' Vol. {volume_number} sarà disponibile il {release_date.strftime('%d/%m/%Y')}.
+                        subject = f"Prossima Uscita: {manga_title} Vol. {volume_number} tra {days_ahead} giorni"
+                        body_text = textwrap.dedent(f"""\
+                            Ciao,
 
-                        Casa editrice: {publisher}
-                        Link per l'acquisto: {link}
-                    
-                        Grazie per aver utilizzato il nostro servizio.
+                            Il manga '{manga_title}' Vol. {volume_number} sarà disponibile il {release_date.strftime('%d/%m/%Y')}, tra {days_ahead} giorni.
 
-                        Cordiali saluti,
-                        Manga Alert Italia
+                            Casa editrice: {publisher}
+                            Link per l'acquisto: {link}
 
-                        Questo è un messaggio automatico, per favore non rispondere a questa email.
-                        """
+                            Grazie per aver utilizzato il nostro servizio.
+                            Manga Alert Italia
+
+                            Questo è un messaggio automatico, per favore non rispondere a questa email.
+                            """)
 
                         try:
                             self.ses_email_manager.send_email(
