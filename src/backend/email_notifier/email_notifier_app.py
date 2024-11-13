@@ -192,8 +192,8 @@ class EmailNotifier:
                             Casa editrice: {publisher}
                             Link per l'acquisto: {link}
 
-                            Grazie per aver utilizzato il nostro servizio.
-                            Manga Alert Italia
+                            Grazie per aver utilizzato il nostro servizio,
+                            Manga Alert Italia.
 
                             Questo è un messaggio automatico, per favore non rispondere a questa email.
                             """)
