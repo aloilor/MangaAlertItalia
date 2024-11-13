@@ -9,7 +9,7 @@ class SESEmailManager:
     A class to send emails using AWS SES.
     """
 
-    def __init__(self, sender_email='aloisi.lorenzo99@gmail.com', region_name='eu-west-1'):
+    def __init__(self, sender_email='no-reply@mangaalertitalia.it', region_name='eu-west-1'):
         """
         Initialize the EmailManager.
 

@@ -42,8 +42,9 @@ def subscribe():
         subscriber_result = db_connector.execute_query(insert_subscriber_query, (email,))
         if subscriber_result:
             subscriber_id = subscriber_result[0]['id']
+
         else:
-            # Fetch the subscriber ID if it already exists
+            # Fetch the subscriber ID if it already exists and it hasn't been returned previously
             get_subscriber_query = "SELECT id FROM subscribers WHERE email_address = %s;"
             subscriber_result = db_connector.execute_query(get_subscriber_query, (email,))
             subscriber_id = subscriber_result[0]['id']
