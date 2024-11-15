@@ -218,8 +218,8 @@ resource "aws_ecs_task_definition" "manga_alert_scraper_ecs_definition" {
   network_mode             = "bridge"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 128
+  memory                   = 128
   requires_compatibilities = ["EC2"]
 
   runtime_platform {
@@ -232,7 +232,7 @@ resource "aws_ecs_task_definition" "manga_alert_scraper_ecs_definition" {
       name      = "manga-alert-scraper-container"
       image     = "${aws_ecr_repository.manga_scraper_image.repository_url}:manga-scraper-image-latest"
       cpu       = 128
-      memory    = 256
+      memory    = 128
       essential = true
 
       logConfiguration = {
@@ -262,8 +262,8 @@ resource "aws_ecs_task_definition" "manga_alert_notifier_ecs_definition" {
   network_mode             = "bridge"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 128
+  memory                   = 128
   requires_compatibilities = ["EC2"]
 
   runtime_platform {
@@ -276,7 +276,7 @@ resource "aws_ecs_task_definition" "manga_alert_notifier_ecs_definition" {
       name      = "manga-alert-notifier"
       image     = "${aws_ecr_repository.email_notifier_image.repository_url}:email-notifier-image-latest"
       cpu       = 128
-      memory    = 256
+      memory    = 128
       essential = true
 
       logConfiguration = {
@@ -305,8 +305,8 @@ resource "aws_ecs_task_definition" "manga_alert_main_backend_ecs_definition" {
   network_mode             = "bridge"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 128
+  memory                   = 128
   requires_compatibilities = ["EC2"]
 
   runtime_platform {
@@ -319,7 +319,7 @@ resource "aws_ecs_task_definition" "manga_alert_main_backend_ecs_definition" {
       name      = "manga-alert-main-backend"
       image     = "${aws_ecr_repository.main_backend_image.repository_url}:main-backend-image-latest"
       cpu       = 128
-      memory    = 256
+      memory    = 128
       essential = true
 
       logConfiguration = {
