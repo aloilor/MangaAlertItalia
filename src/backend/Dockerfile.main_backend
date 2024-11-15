@@ -1,0 +1,13 @@
+FROM python:3.10.12-slim
+
+WORKDIR /app
+
+COPY ./main_backend ./main_backend
+
+COPY ./aws_utils ./aws_utils
+
+COPY ./common_utils ./common_utils
+
+RUN pip install --no-cache-dir -r ./main_backend/requirements.txt
+
+CMD ["python3", "-m", "main_backend.app"]

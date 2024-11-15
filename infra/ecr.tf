@@ -68,3 +68,38 @@ resource "aws_ecr_lifecycle_policy" "email_notifier_repo_lifecycle_policy" {
   }
   EOF
 }
+
+
+# MAIN BACKEND REGISTRY
+resource "aws_ecr_repository" "main_backend_image" {
+  name                 = "main-backend-image-repo"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "main_backend_repo_lifecycle_policy" {
+  repository = aws_ecr_repository.main_backend_image.name
+
+  policy = <<EOF
+  {
+  "rules":[
+      {
+        "rulePriority": 1,
+        "description": "Keep last 3 images",
+        "selection": {
+          "tagStatus": "tagged",
+          "tagPatternList": ["email*"],
+          "countType": "imageCountMoreThan",
+          "countNumber": 3
+        },
+        "action": {
+          "type": "expire"
+        }
+      }
+    ]
+  }
+  EOF
+}
