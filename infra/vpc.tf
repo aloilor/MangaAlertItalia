@@ -123,6 +123,15 @@ resource "aws_security_group" "manga_alert_rds_sg" {
     cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
   }
 
+  # Allow access ECS instances, from Flask app port 5000
+  ingress {
+    description     = "Flask access from my IP"
+    from_port       = 5000
+    to_port         = 5000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.manga_alert_ecs_instances_sg.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

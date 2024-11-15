@@ -299,3 +299,68 @@ resource "aws_ecs_task_definition" "manga_alert_notifier_ecs_definition" {
   ])
 }
 
+# MAIN_BACKEND TASK DEFINITION
+resource "aws_ecs_task_definition" "manga_alert_main_backend_ecs_definition" {
+  family                   = "manga-alert-ecs-main-backend"
+  network_mode             = "bridge"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  cpu                      = 256
+  memory                   = 512
+  requires_compatibilities = ["EC2"]
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+
+  container_definitions = jsonencode([
+    {
+      name      = "manga-alert-main-backend"
+      image     = "${aws_ecr_repository.main_backend_image.repository_url}:main-backend-image-latest"
+      cpu       = 128
+      memory    = 256
+      essential = true
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-create-group  = "true",
+          awslogs-region        = "eu-west-1"
+          awslogs-group         = "manga-alert-app-main-backend-logs"
+          awslogs-stream-prefix = "manga-alert-app-stream-logs"
+        }
+      }
+
+      environment = [
+        {
+          name  = "ECS_AVAILABLE_LOGGING_DRIVERS"
+          value = "json-file, awslogs"
+        }
+      ]
+    }
+  ])
+}
+
+# --- ECS Service for Main Backend ---
+
+resource "aws_ecs_service" "manga_alert_main_backend_service" {
+  name            = "manga-alert-main-backend-service"
+  cluster         = aws_ecs_cluster.manga_alert_ecs_cluster.id
+  task_definition = aws_ecs_task_definition.manga_alert_main_backend_ecs_definition.arn
+  desired_count   = 1
+  launch_type     = "EC2"
+
+  deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
+
+  # Network Configuration
+  # network_configuration {
+  #   security_groups = [aws_security_group.manga_alert_ecs_instances_sg.id]
+  #   subnets = [
+  #     aws_subnet.manga_alert_public_subnet1.id,
+  #     aws_subnet.manga_alert_public_subnet2.id,
+  #   ]
+  #   assign_public_ip = false
+  # }
+}

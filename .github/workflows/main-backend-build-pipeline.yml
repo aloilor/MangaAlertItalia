@@ -4,7 +4,11 @@ env:
   ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
   AWS_REGION: ${{ secrets.AWS_REGION }} 
   MAIN_BACKEND_ECR_REPOSITORY: ${{ secrets.MAIN_BACKEND_ECR_REPOSITORY }}
-  
+  ECS_SERVICE: "manga-alert-main-backend-service"
+  ECS_CLUSTER: "manga-alert-ecs-cluster" 
+  ECS_TASK_DEFINITION: "manga-alert-ecs-main-backend"
+  CONTAINER_NAME: "manga-alert-main-backend"
+
 on:
     push:
       branches:
@@ -81,5 +85,15 @@ jobs:
           echo "image_tag=$IMAGE_TAG" 
           echo "full_image=$ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY:$IMAGE_TAG"
         working-directory: ./src/backend/
+      
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.1.2
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+          force-new-deployment: true
+
 
 
