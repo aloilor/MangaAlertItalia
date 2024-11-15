@@ -1,9 +1,9 @@
-name: Test and build Email Notifier
+name: Test and build Main Backend
 
 env:
   ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
   AWS_REGION: ${{ secrets.AWS_REGION }} 
-  MAIN_BACKEND_ECR_REPOSITORY: ${{ secrets.NOTIFIER_ECR_REPOSITORY }}
+  MAIN_BACKEND_ECR_REPOSITORY: ${{ secrets.MAIN_BACKEND_ECR_REPOSITORY }}
   
 on:
     push:
