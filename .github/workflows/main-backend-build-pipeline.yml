@@ -76,10 +76,10 @@ jobs:
           IMAGE_TAG: "main-backend-image-latest"
         run: |
           docker build -t "$ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY:$IMAGE_TAG" -f Dockerfile.main_backend .
-          docker push "$ECR_REGISTRY/$NOTIFIER_ECR_REPOSITORY:$IMAGE_TAG"
-          echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$NOTIFIER_ECR_REPOSITORY"
+          docker push "$ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY:$IMAGE_TAG"
+          echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY"
           echo "image_tag=$IMAGE_TAG" 
-          echo "full_image=$ECR_REGISTRY/$NOTIFIER_ECR_REPOSITORY:$IMAGE_TAG"
+          echo "full_image=$ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY:$IMAGE_TAG"
         working-directory: ./src/backend/
 
 
