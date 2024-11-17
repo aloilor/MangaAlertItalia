@@ -151,7 +151,14 @@ resource "aws_iam_policy" "ghas_admin_policy" {
         Resource = "*"
       },
 
-
+      # AWS SSM access
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:*",
+        ],
+        Resource = "*"
+      },
     ]
   })
 }
