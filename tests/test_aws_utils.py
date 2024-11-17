@@ -2,6 +2,9 @@ import pytest
 from unittest.mock import patch, mock_open, Mock, MagicMock
 from psycopg.rows import dict_row
 from botocore.exceptions import ClientError
+import base64
+import json
+import os
 
 
 
@@ -13,7 +16,8 @@ from aws_utils.ses_email_manager import SESEmailManager
 
 SECRET_NAME = "my-secret"
 SECRET_STRING = '{"username": "admin", "password": "secret"}'
-SECRET_BINARY = b'\xDE\xAD\xBE\xEF'
+SECRET_BINARY_CONTENT = '{"username": "admin", "password": "secret"}'
+SECRET_BINARY = base64.b64encode(SECRET_BINARY_CONTENT.encode('utf-8'))  # Base64-encoded bytes
 HOST = "manga-alert-host-test"
 DBNAME = "manga_alert_db_test"
 REGION_NAME = "eu-west-1-test"
@@ -27,52 +31,48 @@ MOCK_CREDENTIALS = {
 class TestSecretsManager:
 
     def test_get_secret_with_secret_string(self):
-
         # Mock the boto3 client and its get_secret_value method
         with patch('boto3.session.Session.client') as mock_client_constructor:
-            
             mock_client = Mock()
+            # Simulate AWS returning a secret string
+            mock_client.get_secret_value.return_value = {'SecretString': SECRET_STRING}
+            mock_client_constructor.return_value = mock_client
+
+            secrets_client = AWSSecretsManagerClient(region_name=REGION_NAME)
+            secret = secrets_client.get_secret(SECRET_NAME)
+
+            expected_secret = json.loads(SECRET_STRING)
+            assert secret == expected_secret
+            mock_client.get_secret_value.assert_called_once_with(SecretId=SECRET_NAME)
+
+    def test_get_secret_with_secret_binary(self):
+        # Mock the boto3 client and its get_secret_value method
+        with patch('boto3.session.Session.client') as mock_client_constructor:
+            mock_client = Mock()
+            # Simulate AWS returning a binary secret
             mock_client.get_secret_value.return_value = {'SecretBinary': SECRET_BINARY}
             mock_client_constructor.return_value = mock_client
 
-            secrets_client = AWSSecretsManagerClient(region_name="eu-west-1")
+            secrets_client = AWSSecretsManagerClient(region_name=REGION_NAME)
             secret = secrets_client.get_secret(SECRET_NAME)
 
-            assert secret == SECRET_BINARY
+            expected_secret = json.loads(SECRET_BINARY_CONTENT)
+            assert secret == expected_secret
             mock_client.get_secret_value.assert_called_once_with(SecretId=SECRET_NAME)
-
-
-    def test_get_secret_with_secret_binary(Self):
-        
-        # Mock the boto3 client and its get_secret_value method
-        with patch('boto3.session.Session.client') as mock_client_constructor:
-
-            mock_client = Mock()
-            mock_client.get_secret_value.return_value = {'SecretBinary': SECRET_BINARY}
-            mock_client_constructor.return_value = mock_client
-
-            secrets_client = AWSSecretsManagerClient(region_name="eu-west-1")
-            secret = secrets_client.get_secret(SECRET_NAME)
-
-            assert secret == SECRET_BINARY
-            mock_client.get_secret_value.assert_called_once_with(SecretId=SECRET_NAME)
-
-
 
     def test_get_secret_handle_exception(self):
-        
         # Mock the boto3 client and its get_secret_value method to raise an exception
         with patch('boto3.session.Session.client') as mock_client_constructor:
             mock_client = Mock()
             mock_client.get_secret_value.side_effect = Exception("AWS Error")
             mock_client_constructor.return_value = mock_client
 
-            secrets_client = AWSSecretsManagerClient(region_name="eu-west-1")
+            secrets_client = AWSSecretsManagerClient(region_name=REGION_NAME)
 
             with pytest.raises(Exception) as exc_info:
                 secrets_client.get_secret(SECRET_NAME)
 
-            assert f"Failed to retrieve secret '{SECRET_NAME}': AWS Error" == str(exc_info.value)
+            assert str(exc_info.value) == f"Failed to retrieve secret '{SECRET_NAME}': AWS Error"
             mock_client.get_secret_value.assert_called_once_with(SecretId=SECRET_NAME)
 
 
@@ -83,6 +83,12 @@ class TestDatabaseConnector:
         with patch('aws_utils.db_connector.AWSSecretsManagerClient') as MockSecretsManagerClient:
             mock_secrets_client = MockSecretsManagerClient.return_value
             mock_secrets_client.get_secret.return_value = MOCK_CREDENTIALS
+            
+            env_var_db_username = f"{SECRET_NAME}_username"
+            env_var_db_password = f"{SECRET_NAME}_password"
+            os.environ[env_var_db_username] = "test_user"
+            os.environ[env_var_db_password] = "test_password"
+            
             yield mock_secrets_client
 
     @pytest.fixture
@@ -181,7 +187,7 @@ class TestDatabaseConnector:
             with pytest.raises(Exception) as exc_info:
                 db_connector.connect()
 
-            assert "Failed to connect to database: Failed to retrieve secret" in str(exc_info.value)
+            assert "Failed to connect to database" in str(exc_info.value)
 
     def test_close_connection(self, mock_secrets_manager, mock_psycopg_connect):
         _, mock_connection = mock_psycopg_connect

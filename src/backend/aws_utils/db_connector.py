@@ -2,6 +2,7 @@ import psycopg
 from psycopg.rows import dict_row
 from .secrets_manager import AWSSecretsManagerClient
 import logging
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -33,23 +34,75 @@ class DatabaseConnector:
         """
         Establish a connection to the PostgreSQL database.
 
+        If the environment variables for username and password are already set,
+        use them. Otherwise, retrieve them from AWS Secrets Manager.
+
+        If the connection fails due to authentication error, refresh the credentials
+        from AWS Secrets Manager (in case the secrets have  rotated) and retry once.
+
         :raises Exception: If the connection cannot be established.
         """
+        env_var_db_username = f"{self.secret_name}_username"
+        env_var_db_password = f"{self.secret_name}_password"
+
+        # Attempt to get credentials from environment variables
+        db_username = os.getenv(env_var_db_username)
+        db_password = os.getenv(env_var_db_password)
+
+        # If credentials are not set in environment variables, load them from Secrets Manager
+        if not db_username or not db_password:
+            logger.info("Credentials not found in environment variables. Loading from Secrets Manager.")
+            self.secrets_client.load_secret_as_env_vars(self.secret_name)
+            db_username = os.getenv(env_var_db_username)
+            db_password = os.getenv(env_var_db_password)
 
         try:
-            credentials = self.secrets_client.get_secret(self.secret_name)
             self.connection = psycopg.connect(
                 host=self.host,
                 port=self.port,
                 dbname=self.dbname,
-                user=credentials['username'],
-                password=credentials['password'],
+                user=db_username,
+                password=db_password,
                 row_factory=dict_row
             )
             logger.debug("Successfully connected to the database: %s", self.dbname)
+
+        except psycopg.OperationalError as e:
+            # Check if the error is due to password authentication failure
+            error_message = str(e).lower()
+            if 'password authentication failed' in error_message or 'authentication failed' in error_message:
+                logger.warning("Password authentication failed. Refreshing credentials from Secrets Manager and retrying.")
+               
+                # Refresh credentials from Secrets Manager
+                self.secrets_client.load_secret_as_env_vars(self.secret_name)
+                db_username = os.getenv(env_var_db_username)
+                db_password = os.getenv(env_var_db_password)
+                
+                # Try to connect again
+                try:
+                    self.connection = psycopg.connect(
+                        host=self.host,
+                        port=self.port,
+                        dbname=self.dbname,
+                        user=db_username,
+                        password=db_password,
+                        row_factory=dict_row
+                    )
+                    logger.debug("Successfully connected to the database after refreshing credentials.")
+                
+                except Exception as e:
+                    logger.error("Failed to connect to database after refreshing credentials: %s", e)
+                    raise Exception(f"Failed to connect to database after refreshing credentials: {e}")
+            
+            else:
+                logger.error("Failed to connect to database: %s", e)
+                raise Exception(f"Failed to connect to database: {e}")
+
         except Exception as e:
             logger.error("Failed to connect to database: %s", e)
             raise Exception(f"Failed to connect to database: {e}")
+
+
 
     def execute_query(self, query, params=None):
         """

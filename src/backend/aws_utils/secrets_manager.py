@@ -1,6 +1,9 @@
 import boto3
 import json
 import logging
+import os
+import base64
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,5 +46,34 @@ class AWSSecretsManagerClient:
         if 'SecretString' in response:
             return json.loads(response['SecretString'])
         else:
-            # If secret is binary
-            return response['SecretBinary']
+            # If secret is binary, decode it
+            secret_binary = response['SecretBinary']
+            decoded_binary_secret = base64.b64decode(secret_binary)
+            return json.loads(decoded_binary_secret)
+
+    
+    def load_secret_as_env_vars(self, secret_name):
+        """
+        Retrieve a secret and set its contents as environment variables
+        with names in the format 'SECRETNAME_key'.
+
+        :param secret_name: The name of the secret.
+        :raises Exception: If the secret cannot be retrieved or set as environment variables.
+        """
+        try:
+            secret_dict = self.get_secret(secret_name)
+            if isinstance(secret_dict, dict):
+                for key, value in secret_dict.items():
+                    env_var_name = f"{secret_name}_{key}"
+                    os.environ[env_var_name] = value
+                    logger.debug("Set environment variable %s", env_var_name)
+                logger.info("All secret values have been set as environment variables with prefix '%s_'", secret_name)
+
+            else:
+                logger.error("Secret retrieved is not a dictionary.")
+                raise Exception("Secret format is invalid; expected a JSON object.")
+            
+        except Exception as e:
+            logger.error("Failed to load secret '%s' as environment variables: %s", secret_name, e)
+            raise Exception(f"Failed to load secret '{secret_name}' as environment variables: {e}")
+
