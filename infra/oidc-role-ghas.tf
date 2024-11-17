@@ -55,6 +55,7 @@ resource "aws_iam_policy" "ghas_admin_policy" {
           "ec2:*",
           "ecs:*",
           "ecr:*",
+          "autoscaling:*"
         ],
         Resource = "*"
       },
