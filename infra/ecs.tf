@@ -22,6 +22,22 @@ resource "aws_iam_role_policy_attachment" "ecs_instance_role_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
+resource "aws_iam_role_policy" "ec2_role_policy" {
+  name = "ec2_associate_eip_policy"
+  role = aws_iam_role.ecs_instance_role.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action : "ec2:AssociateAddress",
+        Effect : "Allow",
+        Resource : "*"
+      }
+    ]
+  })
+}
+
+
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
   name = "manga-alert-ecs-instance-profile"
   role = aws_iam_role.ecs_instance_role.name
@@ -153,6 +169,12 @@ resource "aws_launch_template" "manga_alert_ecs_ec2" {
       #!/bin/bash
       echo "ECS_CLUSTER=${aws_ecs_cluster.manga_alert_ecs_cluster.name}" >> /etc/ecs/ecs.config
       echo 'ECS_AVAILABLE_LOGGING_DRIVERS=["json-file","awslogs"]' >> /etc/ecs/ecs.config
+      REGION="eu-west-1"
+      ALLOCATION_ID="${aws_eip.manga_alert_main_backend_ecs_eip.id}"
+      TOKEN=$(curl --request PUT "http://169.254.169.254/latest/api/token" --header "X-aws-ec2-metadata-token-ttl-seconds: 3600")
+      INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id --header "X-aws-ec2-metadata-token: $TOKEN")
+      aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id $ALLOCATION_ID --region $REGION
+
     EOF
   )
 

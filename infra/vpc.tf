@@ -149,3 +149,12 @@ resource "aws_db_subnet_group" "manga_alert_rds_subnet_group" {
   }
 }
 
+# Elastic IP
+resource "aws_eip" "manga_alert_main_backend_ecs_eip" {
+  domain = "vpc"
+}
+
+
+
+
+
