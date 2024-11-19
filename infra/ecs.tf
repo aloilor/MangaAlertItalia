@@ -131,7 +131,8 @@ resource "aws_iam_policy" "ecs_task_policy" {
           "kms:Decrypt",
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "ses:*"
         ],
         Resource = "*"
       }
