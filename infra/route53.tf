@@ -39,3 +39,10 @@ resource "aws_route53_record" "dmarc_record" {
   records = ["v=DMARC1; p=none; rua=mailto:postmaster@mangaalertitalia.it"]
 }
 
+resource "aws_route53_record" "api_record" {
+  zone_id = aws_route53_zone.manga_alert_hosted_zone.zone_id
+  name    = "api.mangaalertitalia.it"
+  type    = "A"
+  ttl     = 300
+  records = [aws_eip.manga_alert_main_backend_ecs_eip.public_ip]
+}

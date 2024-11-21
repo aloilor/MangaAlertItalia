@@ -9,9 +9,40 @@ app = Flask(__name__)
 logger = logging.getLogger(__name__)
 setup_logging()
 
+authorized_mangas = [
+    "Solo Leveling",
+    "Chainsaw Man",
+    "Jujutsu Kaisen"
+]
+max_subscribers = 15
 
 # Initialize the DatabaseConnector
 db_connector = DatabaseConnector()
+
+def check_subscriber_limit():
+    """
+    Checks if the subscribers table has less than max_subscribers records.
+    Returns True if a new subscriber can be added, False otherwise.
+    """
+    try:
+        db_connector.connect()
+        count_query = "SELECT COUNT(*) FROM subscribers;"
+        result = db_connector.execute_query(count_query)
+        print(result)
+        subscriber_count = result[0]['count']
+        if subscriber_count < max_subscribers:
+            return True
+        else:
+            return False
+
+    except Exception as e:
+        logger.error("Error checking subscriber limit: %s", e)
+        # For safety, prevent adding more subscribers if there's an error
+        return False
+
+    finally:
+        db_connector.close()
+
 
 @app.route('/subscribe', methods=['POST'])
 def subscribe():
@@ -25,9 +56,16 @@ def subscribe():
 
     email = data.get('email')
     subscriptions = data.get('subscriptions')
+    for manga_title in subscriptions:
+        if manga_title not in authorized_mangas:
+            return jsonify({'error': 'You provided a manga that is not yet supported, retry'}), 400
 
     if not email or not subscriptions:
         return jsonify({'error': 'Email and subscriptions are required'}), 400
+
+    # Check if the subscriber limit has been reached
+    if not check_subscriber_limit():
+        return jsonify({'error': 'Subscriber limit reached. No more subscriptions are allowed at this time.'}), 403
 
     try:
         db_connector.connect()
