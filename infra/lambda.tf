@@ -22,7 +22,7 @@ resource "aws_lambda_function" "lambda_ssl_renew_certs" {
   source_code_hash = data.archive_file.lambda_ssl_renew_certs_zip.output_base64sha256
   runtime          = "python3.11"
   layers           = [aws_lambda_layer_version.ssl_renew_certs_layer.arn]
-  timeout          = 90
+  timeout          = 180
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {
@@ -54,11 +54,12 @@ data "aws_iam_policy_document" "ssl_renew_certs_lambda_policy_doc" {
 
   statement {
     effect = "Allow"
-    actions = ["route53:ListHostedZones",
+    actions = [
+      "route53:ListHostedZones",
       "route53:GetChange",
       "route53:ChangeResourceRecordSets"
     ]
-    resources = ["arn:aws:route53:::hostedzone/Z09963622FQGDU6DVL521"]
+    resources = ["*"]
   }
 
   statement {

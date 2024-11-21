@@ -160,6 +160,15 @@ resource "aws_iam_policy" "ghas_admin_policy" {
         ],
         Resource = "*"
       },
+
+      # AWS SecretsManager
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:*",
+        ],
+        Resource = "*"
+      },
     ]
   })
 }

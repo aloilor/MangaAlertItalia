@@ -1,6 +1,7 @@
 import os
 import boto3
 import logging
+import json  # Import the json module
 from certbot._internal import main as certbot_main
 from botocore.exceptions import ClientError
 
@@ -11,6 +12,7 @@ def lambda_handler(event, context):
     SECRET_NAME = "ssl/api.mangaalertitalia.it"
     DOMAIN_NAME = "*.mangaalertitalia.it"
     REGION_NAME = "eu-west-1"
+    EMAIL = "aloisi.lorenzo99@gmail.com"
 
     # Create directories for Certbot
     os.makedirs('/tmp/etc/letsencrypt', exist_ok=True)
@@ -22,7 +24,7 @@ def lambda_handler(event, context):
         'certonly',
         '--non-interactive',
         '--agree-tos',
-        '--email', 'aloisi.lorenzo99@gmail.com',
+        '--email', EMAIL,
         '--dns-route53',
         '-d', DOMAIN_NAME,
         '--config-dir', '/tmp/etc/letsencrypt',
@@ -49,7 +51,11 @@ def lambda_handler(event, context):
     # Update AWS Secrets Manager
     client = boto3.client('secretsmanager', region_name=REGION_NAME)
 
-    secret_string = f"""{{"certificate": """ + '"""' + certificate + '""",' + f'"private_key": ' + '"""' + private_key + '"""' + '}}'
+    secret_value = {
+        'certificate': certificate,
+        'private_key': private_key
+    }
+    secret_string = json.dumps(secret_value)
 
     try:
         client.put_secret_value(
