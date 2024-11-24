@@ -17,6 +17,7 @@ authorized_mangas = [
 
 max_subscribers = 15
 
+
 # Initialize the DatabaseConnector
 db_connector = DatabaseConnector()
 
