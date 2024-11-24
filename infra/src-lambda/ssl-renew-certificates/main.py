@@ -9,8 +9,12 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
+    MAIN_DOMAIN_NAME = "api.mangaalertitalia.it",
     SECRET_NAME = "ssl/api.mangaalertitalia.it"
-    DOMAIN_NAME = "*.mangaalertitalia.it"
+    DOMAIN_NAMES = [
+        "api.mangaalertitalia.it",
+        "www.api.mangaalertitalia.it"
+    ]
     REGION_NAME = "eu-west-1"
     EMAIL = "aloisi.lorenzo99@gmail.com"
 
@@ -26,7 +30,8 @@ def lambda_handler(event, context):
         '--agree-tos',
         '--email', EMAIL,
         '--dns-route53',
-        '-d', DOMAIN_NAME,
+        '-d', DOMAIN_NAMES[0],
+        '-d', DOMAIN_NAMES[1],
         '--config-dir', '/tmp/etc/letsencrypt',
         '--work-dir', '/tmp/var/lib/letsencrypt',
         '--logs-dir', '/tmp/var/log/letsencrypt',
@@ -35,16 +40,18 @@ def lambda_handler(event, context):
 
     try:
         certbot_main.main(certbot_args)
+
     except Exception as e:
         logger.error(f"Certbot failed: {e}")
         raise e
 
     # Read the certificate files
-    cert_path = f'/tmp/etc/letsencrypt/live/{DOMAIN_NAME}/fullchain.pem'
-    key_path = f'/tmp/etc/letsencrypt/live/{DOMAIN_NAME}/privkey.pem'
+    cert_path = f'/tmp/etc/letsencrypt/live/{MAIN_DOMAIN_NAME}/fullchain.pem'
+    key_path = f'/tmp/etc/letsencrypt/live/{MAIN_DOMAIN_NAME}/privkey.pem'
 
     with open(cert_path, 'r') as cert_file:
         certificate = cert_file.read()
+
     with open(key_path, 'r') as key_file:
         private_key = key_file.read()
 
@@ -69,5 +76,5 @@ def lambda_handler(event, context):
 
     return {
         'statusCode': 200,
-        'body': f"SSL certificate for {DOMAIN_NAME} renewed and updated in Secrets Manager."
+        'body': f"SSL certificate for {MAIN_DOMAIN_NAME} renewed and updated in Secrets Manager."
     }
