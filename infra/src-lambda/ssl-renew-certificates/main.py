@@ -9,7 +9,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    MAIN_DOMAIN_NAME = "api.mangaalertitalia.it",
+    MAIN_DOMAIN_NAME = "api.mangaalertitalia.it"
     SECRET_NAME = "ssl/api.mangaalertitalia.it"
     DOMAIN_NAMES = [
         "api.mangaalertitalia.it",
@@ -70,6 +70,7 @@ def lambda_handler(event, context):
             SecretString=secret_string
         )
         logger.info(f"Successfully updated secret {SECRET_NAME}")
+        
     except ClientError as e:
         logger.error(f"Error updating secret: {e}")
         raise e

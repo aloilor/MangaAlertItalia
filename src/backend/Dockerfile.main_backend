@@ -8,6 +8,17 @@ COPY ./aws_utils ./aws_utils
 
 COPY ./common_utils ./common_utils
 
+# Copy Nginx configuration template
+COPY ./common_utils/nginx.conf.template /etc/nginx/conf.d/default.conf.template
+
 RUN pip install --no-cache-dir -r ./main_backend/requirements.txt
 
-CMD ["python3", "-m", "main_backend.app"]
+# Install Nginx
+RUN apt-get update && apt-get install -y \
+    nginx \
+    && rm -rf /var/lib/apt/lists/*
+
+# Expose port 443
+EXPOSE 443
+
+CMD ["python3", "-m", "common_utils.instance_startup"]
