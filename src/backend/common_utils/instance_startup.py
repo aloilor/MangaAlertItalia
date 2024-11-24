@@ -111,10 +111,6 @@ def start_services():
         nginx_thread = threading.Thread(target=start_nginx)
         nginx_thread.start()
 
-        # Change directory up one level
-        os.chdir('..')
-        logger.info(f"Changed working directory to {os.getcwd()}")
-
         # Start Flask application (adjust the command as needed)
         logger.info("Starting Flask application")
         subprocess.run(['python3', '-m' 'main_backend.app'])
