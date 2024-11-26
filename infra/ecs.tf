@@ -318,6 +318,15 @@ resource "aws_ecs_task_definition" "manga_alert_notifier_ecs_definition" {
           value = "json-file, awslogs"
         }
       ]
+
+      portMappings = [
+        {
+          containerPort = 5000
+          hostPort      = 5000
+          protocol      = "tcp"
+        }
+      ]
+
     }
   ])
 }

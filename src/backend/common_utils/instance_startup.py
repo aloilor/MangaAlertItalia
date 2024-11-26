@@ -113,7 +113,7 @@ def start_services():
 
         # Start Flask application (adjust the command as needed)
         logger.info("Starting Flask application")
-        subprocess.run(['python3', '-m' 'main_backend.app'])
+        subprocess.run(['python3', '-m' 'main_backend.app', '--host=0.0.0.0'])
 
     except Exception as e:
         logger.error(f"Error starting services: {e}")
