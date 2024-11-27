@@ -84,8 +84,8 @@ def configure_nginx(cert_path, key_path):
 
         # Replace placeholders with actual values
         config = config.replace('{{DOMAIN_NAME}}', DOMAIN_NAME)
-        config = config.replace('/etc/ssl/{{DOMAIN_NAME}}/fullchain.pem', cert_path)
-        config = config.replace('/etc/ssl/{{DOMAIN_NAME}}/privkey.pem', key_path)
+        # config = config.replace('/etc/ssl/{{DOMAIN_NAME}}/fullchain.pem', cert_path)
+        # config = config.replace('/etc/ssl/{{DOMAIN_NAME}}/privkey.pem', key_path)
 
         with open(config_path, 'w') as config_file:
             config_file.write(config)
