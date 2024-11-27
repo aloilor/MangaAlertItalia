@@ -1,6 +1,6 @@
 server {
     listen 443 ssl;
-    server_name api.mangaalertitalia.it;
+    server_name {{DOMAIN_NAME}};
 
     ssl_certificate     /etc/ssl/{{DOMAIN_NAME}}/fullchain.pem;
     ssl_certificate_key /etc/ssl/{{DOMAIN_NAME}}/privkey.pem;

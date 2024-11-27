@@ -103,13 +103,13 @@ def start_services():
     """
     logger.info("Starting Nginx and Flask application")
     try:
-        # # Start Nginx in a separate thread
-        # def start_nginx():
-        #     logger.info("Nginx started")
-        #     subprocess.run(['nginx', '-g', 'daemon off;'])
+        # Start Nginx in a separate thread
+        def start_nginx():
+            logger.info("Nginx started")
+            subprocess.run(['nginx', '-g', 'daemon off;'])
 
-        # nginx_thread = threading.Thread(target=start_nginx)
-        # nginx_thread.start()
+        nginx_thread = threading.Thread(target=start_nginx)
+        nginx_thread.start()
 
         # Start Flask application (adjust the command as needed)
         logger.info("Starting Flask application")
@@ -122,9 +122,9 @@ def start_services():
 
 if __name__ == '__main__':
     try:
-        # certificate, private_key = get_ssl_certificate(SECRET_NAME, REGION_NAME)
-        # cert_path, key_path = write_ssl_files(certificate, private_key)
-        # configure_nginx(cert_path, key_path)
+        certificate, private_key = get_ssl_certificate(SECRET_NAME, REGION_NAME)
+        cert_path, key_path = write_ssl_files(certificate, private_key)
+        configure_nginx(cert_path, key_path)
         start_services()
 
     except Exception as e:
