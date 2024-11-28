@@ -318,15 +318,6 @@ resource "aws_ecs_task_definition" "manga_alert_notifier_ecs_definition" {
           value = "json-file, awslogs"
         }
       ]
-
-      portMappings = [
-        {
-          containerPort = 5000
-          hostPort      = 5000
-          protocol      = "tcp"
-        }
-      ]
-
     }
   ])
 }
@@ -370,6 +361,23 @@ resource "aws_ecs_task_definition" "manga_alert_main_backend_ecs_definition" {
           value = "json-file, awslogs"
         }
       ]
+      portMappings = [
+        {
+          containerPort = 5000
+          hostPort      = 5000
+          protocol      = "tcp"
+        },
+        {
+          containerPort = 443
+          hostPort      = 443
+          protocol      = "tcp"
+        },
+        {
+          containerPort = 80
+          hostPort      = 80
+          protocol      = "tcp"
+        }
+      ]
     }
   ])
 }
@@ -383,8 +391,8 @@ resource "aws_ecs_service" "manga_alert_main_backend_service" {
   desired_count   = 1
   launch_type     = "EC2"
 
-  deployment_minimum_healthy_percent = 50
-  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 0
+  deployment_maximum_percent         = 100
 
   # Network Configuration
   # network_configuration {

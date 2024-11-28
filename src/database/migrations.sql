@@ -35,3 +35,18 @@ CREATE TABLE IF NOT EXISTS alerts_sent (
     UNIQUE (subscriber_id, manga_release_id, alert_type)
 );
 
+-- 2024-11-27
+CREATE FUNCTION enforce_subscribers_limit() RETURNS trigger AS $$
+BEGIN
+    IF (SELECT COUNT(*) FROM subscribers) >= 15 THEN
+        RAISE EXCEPTION 'Subscription limit reached.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER subscribers_limit_trigger
+BEFORE INSERT ON subscribers
+FOR EACH ROW EXECUTE FUNCTION enforce_subscribers_limit();
+
+

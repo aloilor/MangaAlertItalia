@@ -1,7 +1,7 @@
 import os
 import boto3
 import logging
-import json  # Import the json module
+import json 
 from certbot._internal import main as certbot_main
 from botocore.exceptions import ClientError
 
@@ -34,8 +34,7 @@ def lambda_handler(event, context):
         '-d', DOMAIN_NAMES[1],
         '--config-dir', '/tmp/etc/letsencrypt',
         '--work-dir', '/tmp/var/lib/letsencrypt',
-        '--logs-dir', '/tmp/var/log/letsencrypt',
-        '--test-cert'
+        '--logs-dir', '/tmp/var/log/letsencrypt'
     ]
 
     try:
