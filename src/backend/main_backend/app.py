@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from aws_utils.db_connector import DatabaseConnector
 from common_utils.logging_config import setup_logging
 
@@ -16,6 +17,14 @@ authorized_mangas = [
 ]
 
 max_subscribers = 15
+
+CORS(app, resources={
+    r"/subscribe": {
+        "origins": ["https://www.mangaalertitalia.it", "https://mangaalertitalia.it", "http://localhost:3000"],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"],
+    }
+})
 
 
 # Initialize the DatabaseConnector
