@@ -111,9 +111,10 @@ def start_services():
         nginx_thread = threading.Thread(target=start_nginx)
         nginx_thread.start()
 
-        # Start Flask application (adjust the command as needed)
-        logger.info("Starting Flask application")
-        subprocess.run(['python3', '-m' 'main_backend.app', '--host=0.0.0.0'])
+        # Start Gunicorn application 
+        logger.info("Starting Gunicorn server")
+        subprocess.run(['gunicorn', 'main_backend.app:app', '-b', '0.0.0.0:5000', '--workers=3', '--log-level=info'])
+
 
     except Exception as e:
         logger.error(f"Error starting services: {e}")

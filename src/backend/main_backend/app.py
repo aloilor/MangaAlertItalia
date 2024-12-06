@@ -156,7 +156,7 @@ class SubscriptionService:
         body_text = textwrap.dedent(f"""
             Ciao,
 
-            Grazie per esserti iscritto/a a MangaAlertItalia!
+            Grazie per esserti iscritto/a a Manga Alert Italia!
             Le serie a cui ti sei iscritto/a sono: {mangas_list}
 
             Riceverai tre notifiche: 1 mese prima, 1 settimana prima e 1 giorno prima che uscirà un nuovo capitolo su queste serie.
