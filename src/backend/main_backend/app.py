@@ -172,6 +172,7 @@ class SubscriptionService:
         )
 
 
+
 # Initialize the SubscriptionService
 subscription_service = SubscriptionService(
     db_connector=db_connector,
