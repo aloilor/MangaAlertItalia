@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from aws_utils.db_connector import DatabaseConnector
+from aws_utils.ses_email_manager import SESEmailManager
 from common_utils.logging_config import setup_logging
 
+import textwrap
 import logging
 
 app = Flask(__name__)
@@ -26,33 +28,159 @@ CORS(app, resources={
     }
 })
 
-
-# Initialize the DatabaseConnector
+# Initialize Database Connector
 db_connector = DatabaseConnector()
 
-def check_subscriber_limit():
+# Initialize Email Manager
+email_manager = SESEmailManager(sender_email='no-reply@mangaalertitalia.it', region_name='eu-west-1')
+
+
+class SubscriptionService:
     """
-    Checks if the subscribers table has less than max_subscribers records.
-    Returns True if a new subscriber can be added, False otherwise.
+    A service class responsible for subscription-related logic,
+    including subscriber limit checks, existence checks, adding subscribers,
+    and sending welcome emails.
     """
-    try:
-        db_connector.connect()
-        count_query = "SELECT COUNT(*) FROM subscribers;"
-        result = db_connector.execute_query(count_query)
-        print(result)
-        subscriber_count = result[0]['count']
-        if subscriber_count < max_subscribers:
+
+    def __init__(self, db_connector, email_manager, max_subscribers, authorized_mangas, logger):
+        """
+        Initialize the SubscriptionService.
+
+        :param db_connector: An instance of DatabaseConnector for database operations.
+        :param email_manager: An instance of SESEmailManager for sending emails.
+        :param max_subscribers: Maximum number of subscribers allowed.
+        :param authorized_mangas: List of authorized manga titles.
+        :param logger: Logger instance.
+        """
+        self.db_connector = db_connector
+        self.email_manager = email_manager
+        self.max_subscribers = max_subscribers
+        self.authorized_mangas = authorized_mangas
+        self.logger = logger
+
+    def is_subscriber_limit_reached(self):
+        """
+        Checks if the subscriber limit is reached or not.
+        Returns True if limit reached (no more allowed), False otherwise.
+        """
+        try:
+            self.db_connector.connect()
+            count_query = "SELECT COUNT(*) FROM subscribers;"
+            result = self.db_connector.execute_query(count_query)
+            subscriber_count = result[0]['count']
+            return subscriber_count >= self.max_subscribers
+        except Exception as e:
+            self.logger.error("Error checking subscriber limit: %s", e)
+            # For safety, consider limit reached if an error occurs
             return True
-        else:
+        finally:
+            self.db_connector.close()
+
+    def is_subscriber_existing(self, email):
+        """
+        Checks if a subscriber with the given email already exists in the database.
+        
+        :param email: The subscriber's email address.
+        :return: True if subscriber exists, False otherwise.
+        """
+        try:
+            self.db_connector.connect()
+            query = "SELECT id FROM subscribers WHERE email_address = %s;"
+            result = self.db_connector.execute_query(query, (email,))
+            return len(result) > 0
+        except Exception as e:
+            self.logger.error("Error checking subscriber existence: %s", e)
+            # If error occurs, assume not existing to allow processing but handle carefully
+            return False
+        finally:
+            self.db_connector.close()
+
+    def add_subscriber(self, email, subscriptions):
+        """
+        Adds a new subscriber if not existing. If already existing, returns False.
+        
+        :param email: Subscriber's email.
+        :param subscriptions: List of selected mangas.
+        :return: True if newly added, False if subscriber already existed.
+        """
+        # Check if subscriber already exists
+        if self.is_subscriber_existing(email):
             return False
 
-    except Exception as e:
-        logger.error("Error checking subscriber limit: %s", e)
-        # For safety, prevent adding more subscribers if there's an error
-        return False
+        try:
+            self.db_connector.connect()
+            insert_subscriber_query = """
+                INSERT INTO subscribers (email_address)
+                VALUES (%s)
+                ON CONFLICT (email_address) DO NOTHING
+                RETURNING id;
+            """
+            subscriber_result = self.db_connector.execute_query(insert_subscriber_query, (email,))
+            if subscriber_result:
+                subscriber_id = subscriber_result[0]['id']
+            else:
+                # Fetch subscriber ID if already exists but not returned previously
+                get_subscriber_query = "SELECT id FROM subscribers WHERE email_address = %s;"
+                subscriber_result = self.db_connector.execute_query(get_subscriber_query, (email,))
+                subscriber_id = subscriber_result[0]['id']
 
-    finally:
-        db_connector.close()
+            # Insert subscriptions
+            insert_subscription_query = """
+                INSERT INTO subscribers_subscriptions (subscriber_id, email_address, manga_title)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (subscriber_id, manga_title) DO NOTHING;
+            """
+            for manga_title in subscriptions:
+                self.db_connector.execute_query(insert_subscription_query, (subscriber_id, email, manga_title))
+            
+            self.logger.info(f"Successful subscription for '{email}' for the following mangas: {subscriptions}")
+            return True
+        except Exception as e:
+            self.logger.error("Error in adding subscriber: %s", e)
+            raise
+        finally:
+            self.db_connector.close()
+
+    def send_welcome_email(self, email, subscriptions):
+        """
+        Sends a welcome email in Italian to the newly subscribed user,
+        listing the selected mangas.
+
+        :param email: The subscriber's email.
+        :param subscriptions: List of selected mangas.
+        """
+        subject = "Benvenuto/a su MangaAlertItalia!"
+        # Convert the subscriptions list into a formatted string
+        mangas_list = ", ".join(subscriptions)
+
+        body_text = textwrap.dedent(f"""
+            Ciao,
+
+            Grazie per esserti iscritto/a a MangaAlertItalia!
+            Le serie a cui ti sei iscritto/a sono: {mangas_list}
+
+            Riceverai tre notifiche: 1 mese prima, 1 settimana prima e 1 giorno prima che uscirà un nuovo capitolo su queste serie.
+
+            Buona lettura,
+            Lo staff di Manga Alert Italia
+            """)
+
+
+        self.email_manager.send_email(
+            recipient_email=email,
+            subject=subject,
+            body_text=body_text
+        )
+
+
+# Initialize the SubscriptionService
+subscription_service = SubscriptionService(
+    db_connector=db_connector,
+    email_manager=email_manager,
+    max_subscribers=max_subscribers,
+    authorized_mangas=authorized_mangas,
+    logger=logger
+)
 
 
 @app.route('/subscribe', methods=['POST'])
@@ -63,60 +191,37 @@ def subscribe():
     """
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'No input data provided'}), 400
+        return jsonify({'error': 'Nessun input è stato inviato'}), 400
 
     email = data.get('email')
     subscriptions = data.get('subscriptions')
-    for manga_title in subscriptions:
+
+    for manga_title in subscriptions or []:
         if manga_title not in authorized_mangas:
-            return jsonify({'error': 'You provided a manga that is not yet supported, retry'}), 400
+            return jsonify({'error': 'Hai inserito un manga non supportato, riprova.'}), 400
 
     if not email or not subscriptions:
-        return jsonify({'error': 'Email and subscriptions are required'}), 400
+        return jsonify({'error': 'Email e serie di manga sono obbligatorie.'}), 400
 
-    # Check if the subscriber limit has been reached
-    if not check_subscriber_limit():
-        return jsonify({'error': 'Subscriber limit reached. No more subscriptions are allowed at this time.'}), 403
+    # Check subscriber limit
+    if subscription_service.is_subscriber_limit_reached():
+        return jsonify({'error': 'Limite di iscrizioni raggiunto. Non sono permesse altre iscrizioni al momento.'}), 403
 
     try:
-        db_connector.connect()
-
-        # Insert the subscriber into the 'subscribers' table
-        insert_subscriber_query = """
-            INSERT INTO subscribers (email_address)
-            VALUES (%s)
-            ON CONFLICT (email_address) DO NOTHING
-            RETURNING id;
-        """
-        subscriber_result = db_connector.execute_query(insert_subscriber_query, (email,))
-        if subscriber_result:
-            subscriber_id = subscriber_result[0]['id']
-
+        newly_subscribed = subscription_service.add_subscriber(email, subscriptions)
+        if not newly_subscribed:
+            # User already subscribed
+            return jsonify({'error': 'Sei già iscritto/a.'}), 400
         else:
-            # Fetch the subscriber ID if it already exists and it hasn't been returned previously
-            get_subscriber_query = "SELECT id FROM subscribers WHERE email_address = %s;"
-            subscriber_result = db_connector.execute_query(get_subscriber_query, (email,))
-            subscriber_id = subscriber_result[0]['id']
-
-        # Insert subscriptions into 'subscribers_subscriptions' table
-        for manga_title in subscriptions:
-            insert_subscription_query = """
-                INSERT INTO subscribers_subscriptions (subscriber_id, email_address, manga_title)
-                VALUES (%s, %s, %s)
-                ON CONFLICT (subscriber_id, manga_title) DO NOTHING;
-            """
-            db_connector.execute_query(insert_subscription_query, (subscriber_id, email, manga_title))
-            
-        logger.info(f"Succesful subscription for '{email}' for the following mangas: {subscriptions}")
-        return jsonify({'message': 'Subscription successful'}), 200
+            # Send welcome email
+            subscription_service.send_welcome_email(email, subscriptions)
+            return jsonify({'message': 'Iscrizione avvenuta con successo.'}), 200
 
     except Exception as e:
-        logger.error("Error in subscription: %s", e)
-        return jsonify({'error': 'An error occurred during subscription'}), 500
+        logger.error("Error in subscription process: %s", e)
+        return jsonify({'error': 'Si è verificato un errore durante l\'iscrizione.'}), 500
 
-    finally:
-        db_connector.close()
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-    

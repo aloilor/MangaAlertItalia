@@ -7,6 +7,7 @@ const authorizedMangas = [
   "Chainsaw Man",
   "Jujutsu Kaisen",
 ];
+const getEndpoint = "https://api.mangaalertitalia.it/subscribe"
 
 function App() {
   const [email, setEmail] = useState('');
@@ -41,7 +42,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        'https://api.mangaalertitalia.it/subscribe',
+        getEndpoint,
         {
           email: email.trim(),
           subscriptions: subscriptions,
