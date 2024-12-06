@@ -113,7 +113,7 @@ def start_services():
 
         # Start Gunicorn application 
         logger.info("Starting Gunicorn server")
-        subprocess.run(['gunicorn', 'main_backend.app:app', '-b', '0.0.0.0:5000', '--workers=3', '--log-level=info'])
+        subprocess.run(['gunicorn', 'main_backend.app:app', '-b', '0.0.0.0:5000', '--workers=2', '--log-level=info'])
 
 
     except Exception as e:

@@ -165,7 +165,6 @@ class SubscriptionService:
             Lo staff di Manga Alert Italia
             """)
 
-
         self.email_manager.send_email(
             recipient_email=email,
             subject=subject,
