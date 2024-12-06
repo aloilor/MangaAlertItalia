@@ -191,6 +191,7 @@ def subscribe():
     """
     data = request.get_json()
     if not data:
+        logger.error("No input provided")
         return jsonify({'error': 'Nessun input è stato inviato'}), 400
 
     email = data.get('email')
@@ -198,23 +199,27 @@ def subscribe():
 
     for manga_title in subscriptions or []:
         if manga_title not in authorized_mangas:
+            logger.error("Not authorized manga")
             return jsonify({'error': 'Hai inserito un manga non supportato, riprova.'}), 400
 
     if not email or not subscriptions:
+        logger.error("No email or subscription provided")
         return jsonify({'error': 'Email e serie di manga sono obbligatorie.'}), 400
 
     # Check subscriber limit
     if subscription_service.is_subscriber_limit_reached():
+        logger.error("Max number of subscription reached")
         return jsonify({'error': 'Limite di iscrizioni raggiunto. Non sono permesse altre iscrizioni al momento.'}), 403
 
     try:
         newly_subscribed = subscription_service.add_subscriber(email, subscriptions)
         if not newly_subscribed:
-            # User already subscribed
+            logger.error("User already subscribed")
             return jsonify({'error': 'Sei già iscritto/a.'}), 400
         else:
             # Send welcome email
             subscription_service.send_welcome_email(email, subscriptions)
+            logger.error("User {email} correctly subscribed")
             return jsonify({'message': 'Iscrizione avvenuta con successo.'}), 200
 
     except Exception as e:
