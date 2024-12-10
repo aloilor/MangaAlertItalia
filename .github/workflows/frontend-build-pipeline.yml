@@ -1,0 +1,103 @@
+name: Test and build Frontend
+
+env:
+  ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }} 
+  AWS_REGION: ${{ secrets.AWS_REGION }} 
+  MAIN_BACKEND_ECR_REPOSITORY: ${{ secrets.MAIN_BACKEND_ECR_REPOSITORY }}
+  ECS_SERVICE: "manga-alert-main-backend-service"
+  ECS_CLUSTER: "manga-alert-ecs-cluster" 
+  ECS_TASK_DEFINITION: "manga-alert-ecs-main-backend"
+  CONTAINER_NAME: "manga-alert-main-backend"
+
+on:
+    push:
+      branches:
+        - main
+      paths:
+        - src/backend/main_backend/**
+    
+    pull_request:
+      branches:
+        - main
+      paths:
+        - src/backend/main_backend/**
+
+permissions:
+  id-token: write
+  pull-requests: write
+  contents: read    # This is required for actions/checkout
+
+jobs:
+  build:
+    name: Test, build and push 
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        python-version: ["3.10.12"]
+
+    steps:
+
+      - name: Checkout the repository to the runner 
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: Main-backend-Build-GitHub
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./tests/
+
+      - name: Run PyTests
+        id: pytest
+        uses: pavelzw/pytest-action@v2
+        with:
+          verbose: true
+          emoji: false
+          job-summary: true
+          click-to-expand: true
+          report-title: 'Test Report'
+      
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: "main-backend-image-latest"
+        run: |
+          docker build -t "$ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY:$IMAGE_TAG" -f Dockerfile.main_backend .
+          docker push "$ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY:$IMAGE_TAG"
+          echo "IMAGE $IMAGE_TAG is pushed to $ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY"
+          echo "image_tag=$IMAGE_TAG" 
+          echo "full_image=$ECR_REGISTRY/$MAIN_BACKEND_ECR_REPOSITORY:$IMAGE_TAG"
+        working-directory: ./src/backend/
+      
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION --query taskDefinition > task-definition.json
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2.1.2
+        with:
+          task-definition: task-definition.json
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability:  false
+          force-new-deployment: true
+
+
+

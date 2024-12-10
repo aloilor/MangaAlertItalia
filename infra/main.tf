@@ -20,6 +20,14 @@ provider "aws" {
   region = "eu-west-1"
 }
 
+# Provider for issuing ACM certificates
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
+
+
 resource "aws_s3_bucket" "s3-terraform-remote-state" {
   bucket        = "aloilor-terraform-remote-state"
   force_destroy = true
@@ -41,3 +49,7 @@ resource "aws_dynamodb_table" "dynamodb-terraform-lock" {
     type = "S"
   }
 }
+
+resource "random_pet" "this" {}
+
+data "aws_caller_identity" "current" {}
