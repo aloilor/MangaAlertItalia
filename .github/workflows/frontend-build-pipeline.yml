@@ -32,7 +32,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        
+
     steps:
 
       - name: Checkout the repository to the runner 
@@ -60,14 +60,14 @@ jobs:
 
       # Remove all objects from S3 bucket before uploading new build
       - name: Clear S3 bucket
-        run: aws s3 rm "s3://${{ env.S3_BUCKET }}/" --recursive
+        run: aws s3 rm "s3://${{ env.S3_BUCKET_FRONTEND }}/" --recursive
 
       # Upload new build files to S3
       - name: Upload frontend to S3
-        run: aws s3 sync ./src/frontend/build/ "s3://${{ env.S3_BUCKET }}/" --delete
+        run: aws s3 sync ./src/frontend/build/ "s3://${{ env.S3_BUCKET_FRONTEND }}/" --delete
 
       # Invalidate CloudFront cache to ensure new files are served immediately
       - name: Invalidate CloudFront cache
-        run: aws cloudfront create-invalidation --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID_FRONTEND }} --paths "/*"
 
 
