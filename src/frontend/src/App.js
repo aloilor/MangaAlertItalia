@@ -7,7 +7,7 @@ const authorizedMangas = [
   "Chainsaw Man",
   "Jujutsu Kaisen",
 ];
-const getEndpoint = "https://api.mangaalertitalia.it/subscribe"
+const getEndpoint = "https://api.mangaalertitalia.it/subscribe";
 
 function App() {
   const [email, setEmail] = useState('');
