@@ -2,9 +2,9 @@
 
 
 ## TODO
-- [ ] Respawn main backend after generating the new SSL certificates
+- [ ] Respawn main backend instances after generating the new SSL certificates
 - [ ] Unsubscribe link inside the emails
-- [ ] CDN ACM Certificates 
+- [x] CDN ACM Certificates 
 - [ ] Informazioni page on the frontend
 - [ ] Prettier frontend
 - [ ] Request AWS SES production access
