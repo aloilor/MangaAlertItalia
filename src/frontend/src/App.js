@@ -29,7 +29,7 @@ function App() {
     setMessage('');
     setError('');
 
-    // Validazione e sanitizzazione dell'input
+    // Input validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       setError('Per favore inserisci un indirizzo email valido.');
@@ -71,7 +71,16 @@ function App() {
       {/* Navbar */}
       <Navbar bg="light" expand="lg">
         <Container>
-          <Navbar.Brand href="#">MangaAlertItalia</Navbar.Brand>
+          <Navbar.Brand href="#">
+            <img
+              src="/manga-alert-italia-logo.webp"
+              width="30"
+              height="30"
+              className="d-inline-block align-top"
+              alt="Logo"
+            />{' '}
+            Manga Alert Italia
+          </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
@@ -83,6 +92,15 @@ function App() {
 
       {/* Contenuto Principale */}
       <Container className="mt-5">
+        <Row className="justify-content-center">
+          <Col md={8} lg={6} className="text-center mb-4">
+            <p>
+              Scegli i tuoi manga preferiti e iscriviti: ti invieremo una mail 
+              per ricordarti la loro uscita un mese prima, poi una settimana prima, 
+              e infine un giorno prima. In questo modo non perderai mai un volume!
+            </p>
+          </Col>
+        </Row>
         <Row className="justify-content-center">
           <Col md={8} lg={6}>
             {message && <Alert variant="success">{message}</Alert>}
@@ -144,6 +162,7 @@ function App() {
           </Col>
         </Row>
       </Container>
+
     </>
   );
 }

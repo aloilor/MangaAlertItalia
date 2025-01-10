@@ -44,7 +44,6 @@ resource "aws_s3_bucket_policy" "manga_alert_frontend_bucket_policy" {
         Condition = {
           StringEquals = {
             # CloudFront distribution ARN:
-            # Replace `aws_cloudfront_distribution.cdn.id` with your distribution's ID
             "aws:SourceArn" : "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/${aws_cloudfront_distribution.manga_alert_italia_cdn.id}"
           }
         }

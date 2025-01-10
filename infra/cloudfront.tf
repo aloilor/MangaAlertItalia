@@ -1,4 +1,3 @@
-# Create the Origin Access Control for CloudFront
 resource "aws_cloudfront_origin_access_control" "manga_alert_oac_s3" {
   name                              = "mangaalertitalia-s3-oac"
   description                       = "OAC for Manga Alert Italia S3 bucket"
@@ -8,12 +7,13 @@ resource "aws_cloudfront_origin_access_control" "manga_alert_oac_s3" {
 }
 
 
-# Update your existing aws_cloudfront_distribution to use OAC:
 resource "aws_cloudfront_distribution" "manga_alert_italia_cdn" {
   enabled             = true
   is_ipv6_enabled     = true
   comment             = "Distribution for Manga Alert Italia app"
   default_root_object = "index.html"
+
+  aliases = ["mangaalertitalia.it", "www.mangaalertitalia.it"]
 
   origin {
     domain_name              = aws_s3_bucket.manga_alert_frontend_bucket.bucket_regional_domain_name
@@ -29,9 +29,10 @@ resource "aws_cloudfront_distribution" "manga_alert_italia_cdn" {
     }
   }
 
-
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = aws_acm_certificate_validation.manga_alert_cert_validation_complete.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2019"
   }
 
   default_cache_behavior {

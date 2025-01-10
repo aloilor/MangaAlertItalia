@@ -68,28 +68,20 @@ resource "aws_security_group" "manga_alert_ecs_instances_sg" {
   name   = "ecs-instances-security-group"
   vpc_id = aws_vpc.vpc_manga_alert.id
 
-  ingress {
-    description = "SSH access from my IP"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
-  }
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
-  }
+  # ingress {
+  #   description = "SSH access from my IP"
+  #   from_port   = 22
+  #   to_port     = 22
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
+  # }
 
   ingress {
     description = "HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   # Allow access from your IP, from Flask app port 5000
@@ -139,7 +131,7 @@ resource "aws_security_group" "manga_alert_rds_sg" {
     cidr_blocks = ["${chomp(data.http.my_ip.response_body)}/32"]
   }
 
-  # Allow access from your IP, from Flask app port 5000
+  # Allow access from my IP, from Flask app port 5000
   ingress {
     description = "Flask access from my IP"
     from_port   = 5000
@@ -150,7 +142,7 @@ resource "aws_security_group" "manga_alert_rds_sg" {
 
   # Allow access ECS instances, from Flask app port 5000
   ingress {
-    description     = "Flask access from my IP"
+    description     = "Flask access from ecs instances"
     from_port       = 5000
     to_port         = 5000
     protocol        = "tcp"
