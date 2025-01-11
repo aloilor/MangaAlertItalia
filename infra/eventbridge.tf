@@ -102,3 +102,29 @@ resource "aws_cloudwatch_event_target" "main_manga_alert_notifier_every_6_hours"
     aws_ecs_task_definition.manga_alert_notifier_ecs_definition
   ]
 }
+
+
+# EVENTBRIDGE RULE, TARGET, & PERMISSION
+
+# EventBridge rule to trigger every 45 days
+resource "aws_cloudwatch_event_rule" "ssl_renew_certs_schedule" {
+  name                = "ssl-renew-certificates-every-45days"
+  description         = "Triggers the ssl-renew-certs Lambda every 45 days"
+  schedule_expression = "rate(45 days)"
+}
+
+# EventBridge target
+resource "aws_cloudwatch_event_target" "ssl_renew_certs_target" {
+  rule      = aws_cloudwatch_event_rule.ssl_renew_certs_schedule.name
+  target_id = "ssl-renew-certs-lambda-target"
+  arn       = aws_lambda_function.lambda_ssl_renew_certs.arn
+}
+
+# Permission for EventBridge to invoke the Lambda
+resource "aws_lambda_permission" "ssl_renew_certs_eventbridge_permission" {
+  statement_id  = "AllowEventBridgeInvokeLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda_ssl_renew_certs.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.ssl_renew_certs_schedule.arn
+}
