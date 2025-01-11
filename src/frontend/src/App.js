@@ -73,7 +73,7 @@ function App() {
         <Container>
           <Navbar.Brand href="#">
             <img
-              src="/manga-alert-italia-logo.webp"
+              src="/manga-alert-italia-logo-without-bg.png"
               width="30"
               height="30"
               className="d-inline-block align-top"
