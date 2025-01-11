@@ -26,8 +26,7 @@ resource "aws_iam_role" "github_actions_role" {
           },
           StringLike = {
             "token.actions.githubusercontent.com:sub" = [
-              "repo:aloilor/iac-cicd-aws:*",
-              "repo:aloilor/manga-scrape-italy:*"
+              "repo:aloilor/MangaAlertItalia:*"
             ]
           }
         },
