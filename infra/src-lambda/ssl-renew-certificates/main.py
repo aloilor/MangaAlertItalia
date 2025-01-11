@@ -18,6 +18,12 @@ def lambda_handler(event, context):
     REGION_NAME = "eu-west-1"
     EMAIL = "aloisi.lorenzo99@gmail.com"
 
+    # ECS cluster and service
+    ECS_CLUSTER_NAME = "manga-alert-ecs-cluster" 
+    ECS_SERVICE_NAME = "manga-alert-main-backend-service"
+    ECS_TASK_NAME = "manga-alert-ecs-main-backend"
+
+
     # Create directories for Certbot
     os.makedirs('/tmp/etc/letsencrypt', exist_ok=True)
     os.makedirs('/tmp/var/lib/letsencrypt', exist_ok=True)
@@ -73,6 +79,21 @@ def lambda_handler(event, context):
     except ClientError as e:
         logger.error(f"Error updating secret: {e}")
         raise e
+
+    # Force a new ECS deployment so the main backend task can fetch the new certificate
+    try:
+        ecs_client = boto3.client('ecs', region_name=REGION_NAME)
+        ecs_client.update_service(
+            cluster=ECS_CLUSTER_NAME,
+            service=ECS_SERVICE_NAME,
+            taskDefinition= ECS_TASK_NAME,
+            forceNewDeployment=True
+        )
+        logger.info(f"Forcing new deployment for ECS service {ECS_SERVICE_NAME} in cluster {ECS_CLUSTER_NAME}")
+    except ClientError as e:
+        logger.error(f"Error updating ECS service: {e}")
+        raise e
+
 
     return {
         'statusCode': 200,

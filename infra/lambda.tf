@@ -71,11 +71,39 @@ data "aws_iam_policy_document" "ssl_renew_certs_lambda_policy_doc" {
     ]
     resources = ["*"]
   }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecs:DescribeServices",
+      "ecs:ListServices",
+      "ecs:UpdateService"
+    ]
+    resources = ["*"]
+  }
+
+  # Statement for iam:PassRole
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:PassRole"
+    ]
+    resources = [
+      "arn:aws:iam::311141527379:role/manga-alert-ecs-task-execution-role"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+
+
 }
 
 resource "aws_iam_policy" "ssl_renew_certs_lambda_policy" {
   name        = "ssl-renew-certificates-lambda-policy"
-  description = "IAM Role Policy managing permissions for ssl/renew-certificates lambda, such as SecretsManager and Route53"
+  description = "IAM Role Policy managing permissions for ssl/renew-certificates lambda, such as SecretsManager, Route53, and ECS"
   policy      = data.aws_iam_policy_document.ssl_renew_certs_lambda_policy_doc.json
 }
 
