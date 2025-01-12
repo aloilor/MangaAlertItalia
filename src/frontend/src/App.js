@@ -1,13 +1,48 @@
 import React, { useState } from 'react';
-import { Container, Form, Button, Alert, Navbar, Nav, Row, Col, Card } from 'react-bootstrap';
+import {
+  Container,
+  Form,
+  Button,
+  Alert,
+  Navbar,
+  Nav,
+  Row,
+  Col,
+  Card,
+} from 'react-bootstrap';
 import axios from 'axios';
 
-const authorizedMangas = [
-  "Solo Leveling",
-  "Chainsaw Man",
-  "Jujutsu Kaisen",
-];
+const authorizedMangas = ["Solo Leveling", "Chainsaw Man", "Jujutsu Kaisen"];
 const getEndpoint = "https://api.mangaalertitalia.it/subscribe";
+
+// A simple footer component
+function Footer() {
+  return (
+    <Navbar bg="light" className="mt-5">
+      <Container className="justify-content-center">
+        <Navbar.Text className="text-center">
+          © 2025 aloilor&nbsp;&nbsp;
+          <a
+            href="https://www.linkedin.com/in/aloilor/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ marginRight: '10px' }}
+          >
+            LinkedIn
+          </a>
+          <a
+            href="https://github.com/aloilor"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ marginRight: '10px' }}
+          >
+            GitHub
+          </a>
+        </Navbar.Text>
+      </Container>
+    </Navbar>
+  );
+}
 
 function App() {
   const [email, setEmail] = useState('');
@@ -50,8 +85,7 @@ function App() {
         {
           headers: {
             'Content-Type': 'application/json',
-          },
-          // withCredentials: true,
+          }
         }
       );
       setMessage(response.data.message);
@@ -95,15 +129,17 @@ function App() {
         <Row className="justify-content-center">
           <Col md={8} lg={6} className="text-center mb-4">
             <p>
-              Scegli i tuoi manga preferiti e iscriviti: ti invieremo una mail 
-              per ricordarti la loro uscita un mese prima, poi una settimana prima, 
-              e infine un giorno prima. In questo modo non perderai mai un volume!
+              Scegli i tuoi manga preferiti e iscriviti: ti invieremo una mail
+              per ricordarti la loro uscita un mese prima, poi una settimana
+              prima, e infine un giorno prima. In questo modo non perderai mai
+              un volume!
             </p>
             <p>
-              <b>IMPORTANTE</b>: a causa di alcune limitazioni imposte dal nostro provider Email,
-              non siamo in grado di inviare email a Outlook, Hotmail, Yahoo e Live. 
-              Vi consigliamo di usare un indirizzo Google (gmail) per registrarvi alla newsletter
-              e di controllare la cartella spam in caso non riusciste a trovare la mail di benvenuto. 
+              <b>IMPORTANTE</b>: a causa di alcune limitazioni imposte dal nostro
+              provider Email, non siamo in grado di inviare mail a Outlook,
+              Hotmail, Yahoo e Live. Vi consigliamo di usare un indirizzo Google
+              (gmail) per registrarvi alla newsletter e di controllare la
+              cartella spam in caso non riusciste a trovare la mail di benvenuto.
             </p>
           </Col>
         </Row>
@@ -113,7 +149,10 @@ function App() {
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit} className="text-center">
               {/* Riquadro per l'Email */}
-              <Card className="mb-4 mx-auto" style={{ maxWidth: '350px', borderRadius: '15px' }}>
+              <Card
+                className="mb-4 mx-auto"
+                style={{ maxWidth: '350px', borderRadius: '15px' }}
+              >
                 <Card.Body>
                   <Form.Group controlId="formEmail">
                     <Form.Label>Indirizzo Email</Form.Label>
@@ -131,7 +170,10 @@ function App() {
               </Card>
 
               {/* Riquadro per la Selezione Manga */}
-              <Card className="mb-4 mx-auto" style={{ maxWidth: '350px', borderRadius: '15px' }}>
+              <Card
+                className="mb-4 mx-auto"
+                style={{ maxWidth: '350px', borderRadius: '15px' }}
+              >
                 <Card.Body>
                   <Form.Group controlId="formManga">
                     <Form.Label>Seleziona Manga</Form.Label>
@@ -169,9 +211,10 @@ function App() {
         </Row>
       </Container>
 
+      {/* Footer */}
+      <Footer />
     </>
   );
 }
 
 export default App;
-
