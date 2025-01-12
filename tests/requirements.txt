@@ -6,3 +6,4 @@ requests-mock
 pytest-cov
 boto3==1.35.29
 psycopg[binary]==3.2.3
+sendgrid==6.11.0

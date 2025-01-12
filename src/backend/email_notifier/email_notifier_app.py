@@ -27,7 +27,6 @@ class EmailNotifier:
         self.db_connector = DatabaseConnector(self.secret_name)
         self.email_manager = SendGridEmailManager()
 
-
         logger.debug("EmailNotifier initialized.")
 
     
