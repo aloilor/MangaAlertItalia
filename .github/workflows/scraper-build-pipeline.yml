@@ -12,11 +12,6 @@ on:
       paths:
         - src/backend/manga_scraper/**
     
-    pull_request:
-      branches:
-        - main
-      paths:
-        - src/backend/manga_scraper/**
 
 permissions:
   id-token: write

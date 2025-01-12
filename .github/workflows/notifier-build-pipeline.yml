@@ -11,12 +11,7 @@ on:
         - main
       paths:
         - src/backend/email_notifier/**
-    
-    pull_request:
-      branches:
-        - main
-      paths:
-        - src/backend/email_notifier/**
+
 
 permissions:
   id-token: write
