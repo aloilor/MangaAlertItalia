@@ -1,8 +1,8 @@
-# Manga Alert Italia
+## Manga Alert Italia ##
 ![visitors](https://visitor-badge.laobi.icu/badge?page_id=aloilor/MangaAlertItalia)
 
 
-## TODO
+## TODO ##
 
 - [x] CDN ACM Certificates
 - [x] Request AWS SES production access - Rejected by AWS, gotta find another way
