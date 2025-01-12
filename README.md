@@ -1,4 +1,5 @@
 # Manga Alert Italia
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=aloilor/MangaAlertItalia)
 
 
 ## TODO
