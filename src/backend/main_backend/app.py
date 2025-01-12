@@ -35,7 +35,6 @@ db_connector = DatabaseConnector()
 # Initialize Email Manager
 email_manager = SendGridEmailManager(sender_email='no-reply@mangaalertitalia.it', region_name='eu-west-1')
 
-
 class SubscriptionService:
     """
     A service class responsible for subscription-related logic,
