@@ -219,7 +219,7 @@ def subscribe():
         else:
             # Send welcome email
             subscription_service.send_welcome_email(email, subscriptions)
-            logger.error("User {email} correctly subscribed")
+            logger.info(f"User '{email}' correctly subscribed")
             return jsonify({'message': 'Iscrizione avvenuta con successo.'}), 200
 
     except Exception as e:

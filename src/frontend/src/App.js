@@ -102,8 +102,8 @@ function App() {
             <p>
               <b>IMPORTANTE</b>: a causa di alcune limitazioni imposte dal nostro provider Email,
               non siamo in grado di inviare email a Outlook, Hotmail, Yahoo e Live. 
-              Vi consigliamo di usare un indirizzo Google (gmail) 
-              per registrarvi alla newsletter. 
+              Vi consigliamo di usare un indirizzo Google (gmail) per registrarvi alla newsletter
+              e di controllare la cartella spam in caso non riusciste a trovare la mail di benvenuto. 
             </p>
           </Col>
         </Row>
