@@ -99,6 +99,12 @@ function App() {
               per ricordarti la loro uscita un mese prima, poi una settimana prima, 
               e infine un giorno prima. In questo modo non perderai mai un volume!
             </p>
+            <p>
+              <b>IMPORTANTE</b>: a causa di alcune limitazioni imposte dal nostro provider Email,
+              non siamo in grado di inviare email a Outlook, Hotmail, Yahoo e Live. 
+              Vi consigliamo di usare un indirizzo Google (gmail) 
+              per registrarvi alla newsletter. 
+            </p>
           </Col>
         </Row>
         <Row className="justify-content-center">
