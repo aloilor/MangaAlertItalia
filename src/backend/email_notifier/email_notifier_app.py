@@ -9,6 +9,8 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 
+UNSUBSCRIBE_ENDPOINT = 'https://api.mangaalertitalia.it/unsubscribe/'
+
 
 class EmailNotifier:
     """
@@ -65,7 +67,7 @@ class EmailNotifier:
 
         try:
             query = """
-                SELECT s.email_address
+                SELECT s.email_address, s.unsubscribe_token
                 FROM subscribers s
                 JOIN subscribers_subscriptions ss ON s.id = ss.subscriber_id
                 WHERE ss.manga_title = %s
@@ -150,7 +152,7 @@ class EmailNotifier:
         try:
             # Define alert schedules
             alert_schedules = [
-                {'alert_type': '1_month', 'days_before': 100},
+                {'alert_type': '1_month', 'days_before': 30},
                 {'alert_type': '1_week', 'days_before': 7},
                 {'alert_type': '1_day', 'days_before': 1},
             ]
@@ -175,6 +177,7 @@ class EmailNotifier:
 
                     for subscriber in subscribers:
                         email_address = subscriber['email_address']
+                        unsubscribe_token = subscriber['unsubscribe_token']
 
                         # Check if the alert has already been sent
                         if self.alert_already_sent(manga_release_id, alert_type, email_address):
@@ -190,6 +193,9 @@ class EmailNotifier:
 
                             Casa editrice: {publisher}
                             Link per l'acquisto: {link}
+
+                            Clicca qui per disiscriverti in qualsiasi momento:
+                            {UNSUBSCRIBE_ENDPOINT}{unsubscribe_token}
 
                             Grazie per aver utilizzato il nostro servizio,
                             Manga Alert Italia.

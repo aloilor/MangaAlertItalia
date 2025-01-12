@@ -184,7 +184,7 @@ class TestEmailNotifier:
             elif 'SELECT s.email_address' in query:
                 # fetch_subscribers_for_manga
                 return [
-                    {'email_address': 'user@example.com'}
+                    {'email_address': 'user@example.com', 'unsubscribe_token': 'example_unsubscribe_token'}
                 ]
             
             elif 'SELECT alert_sent' in query:
