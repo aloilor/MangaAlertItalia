@@ -20,22 +20,22 @@ class TestEmailNotifier:
             yield mock_db_connector_instance
     
     @pytest.fixture
-    def mock_ses_email_manager(self):
+    def mock_email_manager(self):
         """
-        Fixture to mock the SESEmailManager.
+        Fixture to mock the SendGridEmailManager.
         """
-        with patch('email_notifier.email_notifier_app.SESEmailManager') as mock_ses_email_manager_class:
-            mock_ses_email_manager_instance = MagicMock()
-            mock_ses_email_manager_class.return_value = mock_ses_email_manager_instance
-            yield mock_ses_email_manager_instance
+        with patch('email_notifier.email_notifier_app.SendGridEmailManager') as mock_email_manager_class:
+            mock_email_manager_instance = MagicMock()
+            mock_email_manager_class.return_value = mock_email_manager_instance
+            yield mock_email_manager_instance
     
     @pytest.fixture
-    def email_notifier(self, mock_db_connector, mock_ses_email_manager):
+    def email_notifier(self, mock_db_connector, mock_email_manager):
         """
         Fixture to provide an EmailNotifier instance with mocked dependencies.
         """
         with patch('email_notifier.email_notifier_app.DatabaseConnector', return_value=mock_db_connector), \
-            patch('email_notifier.email_notifier_app.SESEmailManager', return_value=mock_ses_email_manager):
+            patch('email_notifier.email_notifier_app.SendGridEmailManager', return_value=mock_email_manager):
             notifier = EmailNotifier()
             yield notifier
 
@@ -167,7 +167,7 @@ class TestEmailNotifier:
         assert result is True  
 
 
-    def test_send_alerts(self, email_notifier, mock_db_connector, mock_ses_email_manager):
+    def test_send_alerts(self, email_notifier, mock_db_connector, mock_email_manager):
         """
         Test that send_alerts sends emails and marks alerts as sent.
         """
@@ -200,11 +200,11 @@ class TestEmailNotifier:
 
         mock_db_connector.execute_query.side_effect = execute_query_side_effect
 
-        mock_ses_email_manager.send_email.return_value = None
+        mock_email_manager.send_email.return_value = None
 
         email_notifier.send_alerts()
 
-        assert mock_ses_email_manager.send_email.called
+        assert mock_email_manager.send_email.called
         assert mock_db_connector.execute_query.call_count >= 1
 
 

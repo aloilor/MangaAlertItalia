@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from aws_utils.db_connector import DatabaseConnector
 from aws_utils.ses_email_manager import SESEmailManager
+from common_utils.sg_email_manager import SendGridEmailManager
 from common_utils.logging_config import setup_logging
 
 import textwrap
@@ -32,7 +33,7 @@ CORS(app, resources={
 db_connector = DatabaseConnector()
 
 # Initialize Email Manager
-email_manager = SESEmailManager(sender_email='no-reply@mangaalertitalia.it', region_name='eu-west-1')
+email_manager = SendGridEmailManager(sender_email='no-reply@mangaalertitalia.it', region_name='eu-west-1')
 
 
 class SubscriptionService:

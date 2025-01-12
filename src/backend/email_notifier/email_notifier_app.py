@@ -2,8 +2,8 @@ import logging
 import textwrap
 
 
-from aws_utils.ses_email_manager import SESEmailManager
 from aws_utils.db_connector import DatabaseConnector
+from common_utils.sg_email_manager import SendGridEmailManager
 from datetime import date
 
 
@@ -20,12 +20,13 @@ class EmailNotifier:
         Initialize the EmailNotifier task.
 
         :param db_connector: An instance of DatabaseConnector.
-        :param email_notifier: An instance of SESEmailManager.
+        :param email_manager: An instance of SendGridEmailManager.
         """
 
         self.secret_name = "rds!db-4a66914f-6981-4530-b0ee-679115c8aa8a"
         self.db_connector = DatabaseConnector(self.secret_name)
-        self.ses_email_manager = SESEmailManager()
+        self.email_manager = SendGridEmailManager()
+
 
         logger.debug("EmailNotifier initialized.")
 
@@ -199,7 +200,7 @@ class EmailNotifier:
                             """)
 
                         try:
-                            self.ses_email_manager.send_email(
+                            self.email_manager.send_email(
                                 recipient_email=email_address,
                                 subject=subject,
                                 body_text=body_text

@@ -6,6 +6,7 @@
 - [x] CDN ACM Certificates
 - [x] Request AWS SES production access - Rejected by AWS, gotta find another way
 - [x] Respawn main backend instances after generating the new SSL certificates
+- [x] Setup SendGrid to replace AWS SES
 - [ ] Unsubscribe link inside the emails
 - [ ] Informazioni page on the frontend
 - [ ] Prettier frontend
