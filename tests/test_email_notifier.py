@@ -111,12 +111,12 @@ class TestEmailNotifier:
         """
         Test that mark_alert_sent executes the correct query.
         """
-        email_notifier.mark_alert_sent(subscriber_id=1, manga_release_id=1, alert_type='1_week')
+        email_notifier.mark_alert_sent(manga_release_id=1, alert_type='1_week', email_address='user@example.com')
 
         mock_db_connector.execute_query.assert_called_once()
         called_args = mock_db_connector.execute_query.call_args
         assert 'INSERT INTO alerts_sent' in called_args[0][0]
-        assert called_args[0][1] == [1, 1, '1_week']
+        assert called_args[0][1] == [1, '1_week', 'user@example.com']
 
     
     def test_mark_alert_sent_exception(self, email_notifier, mock_db_connector):
@@ -126,7 +126,7 @@ class TestEmailNotifier:
         mock_db_connector.execute_query.side_effect = Exception('Database Error')
 
         with pytest.raises(Exception) as exc_info:
-            email_notifier.mark_alert_sent(subscriber_id=1, manga_release_id=1, alert_type='1_week')
+            email_notifier.mark_alert_sent(manga_release_id=1, alert_type='1_week', email_address='user@example.com')
 
         assert 'Database Error' in str(exc_info.value)
     
@@ -137,7 +137,7 @@ class TestEmailNotifier:
         """
         mock_db_connector.execute_query.return_value = [{'alert_sent': True}]
 
-        result = email_notifier.alert_already_sent(subscriber_id=1, manga_release_id=1, alert_type='1_week')
+        result = email_notifier.alert_already_sent(manga_release_id=1, alert_type='1_week', email_address='user@example.com')
 
         mock_db_connector.execute_query.assert_called_once()
         assert result is True
@@ -149,7 +149,7 @@ class TestEmailNotifier:
         """
         mock_db_connector.execute_query.return_value = [{'alert_sent': False}]
 
-        result = email_notifier.alert_already_sent(subscriber_id=1, manga_release_id=1, alert_type='1_week')
+        result = email_notifier.alert_already_sent(manga_release_id=1, alert_type='1_week', email_address='user@example.com')
 
         mock_db_connector.execute_query.assert_called_once()
         assert result is False
@@ -161,7 +161,7 @@ class TestEmailNotifier:
         """
         mock_db_connector.execute_query.side_effect = Exception('Database Error')
 
-        result = email_notifier.alert_already_sent(subscriber_id=1, manga_release_id=1, alert_type='1_week')
+        result = email_notifier.alert_already_sent(manga_release_id=1, alert_type='1_week', email_address='user@example.com')
 
         mock_db_connector.execute_query.assert_called_once()
         assert result is True  
@@ -181,10 +181,10 @@ class TestEmailNotifier:
                     {'id': 1, 'manga_title': 'Manga A', 'volume_number': '1', 'release_date': date.fromisoformat("2022-09-19"), 'publisher': 'Publisher A', 'page_link': 'http://example.com/manga-a'}
                 ]
             
-            elif 'SELECT s.id, s.email_address' in query:
+            elif 'SELECT s.email_address' in query:
                 # fetch_subscribers_for_manga
                 return [
-                    {'id': 1, 'email_address': 'user@example.com'}
+                    {'email_address': 'user@example.com'}
                 ]
             
             elif 'SELECT alert_sent' in query:

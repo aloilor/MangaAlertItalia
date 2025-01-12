@@ -13,9 +13,8 @@ import {
 import axios from 'axios';
 
 const authorizedMangas = ["Solo Leveling", "Chainsaw Man", "Jujutsu Kaisen"];
-const getEndpoint = "https://api.mangaalertitalia.it/subscribe";
+const subscribeEndpoint = "https://api.mangaalertitalia.it/subscribe";
 
-// A simple footer component
 function Footer() {
   return (
     <Navbar bg="light" className="mt-5">
@@ -77,7 +76,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        getEndpoint,
+        subscribeEndpoint,
         {
           email: email.trim(),
           subscriptions: subscriptions,
@@ -218,3 +217,4 @@ function App() {
 }
 
 export default App;
+

@@ -7,17 +7,23 @@ from common_utils.logging_config import setup_logging
 
 import textwrap
 import logging
+import secrets 
+
 
 app = Flask(__name__)
 
 logger = logging.getLogger(__name__)
 setup_logging()
 
+UNSUBSCRIBE_ENDPOINT = 'https://api.mangaalertitalia.it/unsubscribe/'
+
 authorized_mangas = [
     "Solo Leveling",
     "Chainsaw Man",
     "Jujutsu Kaisen"
 ]
+
+
 
 max_subscribers = 15
 
@@ -95,7 +101,7 @@ class SubscriptionService:
         finally:
             self.db_connector.close()
 
-    def add_subscriber(self, email, subscriptions):
+    def add_subscriber(self, email, subscriptions, unsubscribe_token):
         """
         Adds a new subscriber if not existing. If already existing, returns False.
         
@@ -110,12 +116,15 @@ class SubscriptionService:
         try:
             self.db_connector.connect()
             insert_subscriber_query = """
-                INSERT INTO subscribers (email_address)
-                VALUES (%s)
+                INSERT INTO subscribers (email_address, unsubscribe_token)
+                VALUES (%s, %s)
                 ON CONFLICT (email_address) DO NOTHING
                 RETURNING id;
             """
-            subscriber_result = self.db_connector.execute_query(insert_subscriber_query, (email,))
+            subscriber_result = self.db_connector.execute_query(
+                insert_subscriber_query, (email, unsubscribe_token)
+            )
+
             if subscriber_result:
                 subscriber_id = subscriber_result[0]['id']
             else:
@@ -141,7 +150,7 @@ class SubscriptionService:
         finally:
             self.db_connector.close()
 
-    def send_welcome_email(self, email, subscriptions):
+    def send_welcome_email(self, email, subscriptions, unsubscribe_token):
         """
         Sends a welcome email in Italian to the newly subscribed user,
         listing the selected mangas.
@@ -160,6 +169,10 @@ class SubscriptionService:
             Le serie a cui ti sei iscritto/a sono: {mangas_list}
 
             Riceverai tre notifiche: 1 mese prima, 1 settimana prima e 1 giorno prima che uscirà un nuovo capitolo su queste serie.
+
+            Clicca qui per disiscriverti in qualsiasi momento:
+            {UNSUBSCRIBE_ENDPOINT}{unsubscribe_token}
+
 
             Buona lettura,
             Lo staff di Manga Alert Italia
@@ -211,20 +224,60 @@ def subscribe():
         logger.error("Max number of subscription reached")
         return jsonify({'error': 'Limite di iscrizioni raggiunto. Non sono permesse altre iscrizioni al momento.'}), 403
 
+    unsubscribe_token = secrets.token_urlsafe(16) 
     try:
-        newly_subscribed = subscription_service.add_subscriber(email, subscriptions)
+        newly_subscribed = subscription_service.add_subscriber(email, subscriptions, unsubscribe_token)
         if not newly_subscribed:
             logger.error("User already subscribed")
             return jsonify({'error': 'Sei già iscritto/a.'}), 400
         else:
             # Send welcome email
-            subscription_service.send_welcome_email(email, subscriptions)
-            logger.info(f"User '{email}' correctly subscribed")
+            subscription_service.send_welcome_email(email, subscriptions, unsubscribe_token)
+            logger.info(f"User '{email}' correctly subscribed, with token '{unsubscribe_token}'")
             return jsonify({'message': 'Iscrizione avvenuta con successo.'}), 200
 
     except Exception as e:
         logger.error("Error in subscription process: %s", e)
         return jsonify({'error': 'Si è verificato un errore durante l\'iscrizione.'}), 500
+    
+@app.route('/unsubscribe/<token>', methods=['DELETE'])
+def unsubscribe_token(token):
+    """
+    Unsubscribe the user based on a unique token.
+    """
+    try:
+        db_connector.connect()
+        # Find the user by token
+        select_query = "SELECT email_address, id FROM subscribers WHERE unsubscribe_token = %s;"
+        user_data = db_connector.execute_query(select_query, (token,))
+        if not user_data:
+            logger.error("Invalid unsubscribe token")
+            return jsonify({'error': 'Token di disiscrizione non valido.'}), 400
+
+        email = user_data[0]['email_address']
+        
+        # Delete user subscriptions
+        delete_subscriptions_query = """
+            DELETE FROM subscribers_subscriptions
+            WHERE email_address = %s;
+        """
+        db_connector.execute_query(delete_subscriptions_query, (email,))
+
+        # Delete the user (optional)
+        delete_user_query = """
+            DELETE FROM subscribers
+            WHERE email_address = %s;
+        """
+        db_connector.execute_query(delete_user_query, (email,))
+
+        logger.info(f"User with token '{token}' unsubscribed successfully.")
+        return jsonify({'message': 'Sei stato/a disiscritto/a con successo.'}), 200
+    except Exception as e:
+        logger.error("Error in token-based unsubscribe process: %s", e)
+        return jsonify({'error': 'Si è verificato un errore durante la disiscrizione.'}), 500
+    finally:
+        db_connector.close()
+
 
 
 

@@ -50,3 +50,18 @@ BEFORE INSERT ON subscribers
 FOR EACH ROW EXECUTE FUNCTION enforce_subscribers_limit();
 
 
+-- 2025-01-12
+ALTER TABLE subscribers
+ADD COLUMN unsubscribe_token VARCHAR(255) NOT NULL DEFAULT 'initial_token';
+
+ALTER TABLE alerts_sent
+ADD COLUMN email_address VARCHAR(255) NOT NULL;
+
+ALTER TABLE alerts_sent
+DROP COLUMN subscriber_id;
+
+ALTER TABLE alerts_sent
+ADD CONSTRAINT alerts_sent_manga_alert_email_unique
+UNIQUE (manga_release_id, alert_type, email_address);
+
+

@@ -65,7 +65,7 @@ class EmailNotifier:
 
         try:
             query = """
-                SELECT s.id, s.email_address
+                SELECT s.email_address
                 FROM subscribers s
                 JOIN subscribers_subscriptions ss ON s.id = ss.subscriber_id
                 WHERE ss.manga_title = %s
@@ -80,44 +80,44 @@ class EmailNotifier:
             raise
     
 
-    def mark_alert_sent(self, subscriber_id, manga_release_id, alert_type):
+    def mark_alert_sent(self, manga_release_id, alert_type, email_address):
         """
         Mark a specific alert as sent for a subscriber and manga release.
-
-        :param subscriber_id: ID of the subscriber.
         :param manga_release_id: ID of the manga release.
         :param alert_type: Type of the alert (e.g., 'on_subscription', '1_month', '1_week', '1_day').
+        :param email_address: email_address to which the alert has been sent.
+
         """
 
         try:
             query = """
-                INSERT INTO alerts_sent (subscriber_id, manga_release_id, alert_type, alert_sent)
-                VALUES (%s, %s, %s, TRUE)
-                ON CONFLICT (subscriber_id, manga_release_id, alert_type) DO UPDATE
+                INSERT INTO alerts_sent (manga_release_id, alert_type, alert_sent, email_address)
+                VALUES (%s, %s, TRUE, %s)
+                ON CONFLICT (manga_release_id, alert_type, email_address) DO UPDATE
                 SET alert_sent = TRUE;
             """
-            params = [subscriber_id, manga_release_id, alert_type]
+            params = [manga_release_id, alert_type, email_address]
             self.db_connector.execute_query(query, params)
             logger.debug(
-                "Marked alert '%s' as sent for subscriber_id: %s, manga_release_id: %s",
-                alert_type, subscriber_id, manga_release_id
+                "Marked alert '%s' as sent for subsriber: %s, manga_release_id: %s",
+                alert_type, email_address, manga_release_id
             )
 
         except Exception as e:
             logger.error(
-                "Error marking alert '%s' as sent for subscriber_id '%s', manga_release_id '%s': %s",
-                alert_type, subscriber_id, manga_release_id, e
+                "Error marking alert '%s' as sent for subscriber '%s', manga_release_id '%s': %s",
+                alert_type, email_address, manga_release_id, e
             )
             raise
     
 
-    def alert_already_sent(self, subscriber_id, manga_release_id, alert_type):
+    def alert_already_sent(self, manga_release_id, alert_type, email_address):
         """
         Check if an alert has already been sent to a subscriber for a manga release.
 
-        :param subscriber_id: ID of the subscriber.
         :param manga_release_id: ID of the manga release.
         :param alert_type: Type of the alert (e.g., 'on_subscription', '1_month', '1_week', '1_day').
+        :param email_address: email_address to which the alert has been sent.
         :return: True if alert has been sent, False otherwise.
         """
 
@@ -125,9 +125,9 @@ class EmailNotifier:
             query = """
                 SELECT alert_sent
                 FROM alerts_sent
-                WHERE subscriber_id = %s AND manga_release_id = %s AND alert_type = %s
+                WHERE email_address = %s AND manga_release_id = %s AND alert_type = %s
             """
-            params = [subscriber_id, manga_release_id, alert_type]
+            params = [email_address, manga_release_id, alert_type]
             result = self.db_connector.execute_query(query, params)
             if result and result[0]['alert_sent']:
                 return True
@@ -136,8 +136,8 @@ class EmailNotifier:
             
         except Exception as e:
             logger.error(
-                "Error checking if alert '%s' has been sent for subscriber_id '%s', manga_release_id '%s': %s",
-                alert_type, subscriber_id, manga_release_id, e
+                "Error checking if alert '%s' has been sent for subscriber '%s', manga_release_id '%s': %s",
+                alert_type, email_address, manga_release_id, e
             )
             # For safety, assume the alert has been sent to prevent duplicate emails
             return True
@@ -150,7 +150,7 @@ class EmailNotifier:
         try:
             # Define alert schedules
             alert_schedules = [
-                {'alert_type': '1_month', 'days_before': 30},
+                {'alert_type': '1_month', 'days_before': 100},
                 {'alert_type': '1_week', 'days_before': 7},
                 {'alert_type': '1_day', 'days_before': 1},
             ]
@@ -174,11 +174,10 @@ class EmailNotifier:
                     subscribers = self.fetch_subscribers_for_manga(manga_title)
 
                     for subscriber in subscribers:
-                        subscriber_id = subscriber['id']
                         email_address = subscriber['email_address']
 
                         # Check if the alert has already been sent
-                        if self.alert_already_sent(subscriber_id, manga_release_id, alert_type):
+                        if self.alert_already_sent(manga_release_id, alert_type, email_address):
                             logger.info("Alert '%s' already sent to '%s' for manga_id '%s'", alert_type, email_address, manga_release_id)
                             continue
 
@@ -209,7 +208,7 @@ class EmailNotifier:
                                 alert_type, email_address, manga_release_id
                             )
                             # Mark the alert as sent
-                            self.mark_alert_sent(subscriber_id, manga_release_id, alert_type)
+                            self.mark_alert_sent(manga_release_id, alert_type, email_address)
 
                         except Exception as e:
                             logger.error("Failed to send '%s' alert to %s: %s", alert_type, email_address, e)
