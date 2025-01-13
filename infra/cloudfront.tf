@@ -21,6 +21,12 @@ resource "aws_cloudfront_distribution" "manga_alert_italia_cdn" {
     origin_access_control_id = aws_cloudfront_origin_access_control.manga_alert_oac_s3.id
   }
 
+  custom_error_response {
+    error_code         = 403
+    response_page_path = "/index.html"
+    response_code      = 200
+  }
+
 
   restrictions {
     geo_restriction {

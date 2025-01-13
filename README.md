@@ -9,10 +9,9 @@
 - [x] Respawn main backend instances after generating the new SSL certificates
 - [x] Setup SendGrid to replace AWS SES
 - [x] Footer with rights and links to LinkedIn and GitHub
-- [ ] Unsubscribe API and link inside the emails
+- [x] Unsubscribe API and link inside the emails
+- [x] Informazioni page on the frontend
 - [ ] Telegram Bot to send notifications
-- [ ] Informazioni page on the frontend
-- [ ] Prettier frontend
 - [ ] Finish to write documentation
 
 

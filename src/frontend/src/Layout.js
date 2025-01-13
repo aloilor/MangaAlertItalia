@@ -1,6 +1,7 @@
 // Layout.js
 import React from 'react';
 import { Navbar, Nav, Container } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 function Footer() {
   return (
@@ -33,10 +34,9 @@ function Footer() {
 function Layout({ children }) {
   return (
     <>
-      {/* Navbar at the top of every page */}
       <Navbar bg="light" expand="lg">
         <Container>
-          <Navbar.Brand href="#">
+          <Navbar.Brand as={Link} to="/">
             <img
               src="/manga-alert-italia-logo-without-bg.png"
               width="30"
@@ -49,16 +49,17 @@ function Layout({ children }) {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
-              <Nav.Link href="#">Informazioni</Nav.Link>
+              {/* Replace the # link with our route */}
+              <Nav.Link as={Link} to="/informazioni">
+                Informazioni
+              </Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
 
-      {/* Main content area */}
       <main>{children}</main>
 
-      {/* Footer at the bottom of every page */}
       <Footer />
     </>
   );
