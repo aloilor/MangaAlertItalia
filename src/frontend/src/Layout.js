@@ -25,6 +25,12 @@ function Footer() {
           >
             GitHub
           </a>
+          {/* <a
+            href="mailto:aloisi.lorenzo99@gmail.com"
+            style={{ textDecoration: 'none' }}
+          >
+            aloisi.lorenzo99@gmail.com
+          </a> */}
         </Navbar.Text>
       </Container>
     </Navbar>
@@ -49,7 +55,6 @@ function Layout({ children }) {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
-              {/* Replace the # link with our route */}
               <Nav.Link as={Link} to="/informazioni">
                 Informazioni
               </Nav.Link>
