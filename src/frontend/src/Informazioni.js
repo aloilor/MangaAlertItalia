@@ -68,7 +68,7 @@ function Informazioni() {
 
         {/* New Accordion for support/contacts */}
         <Accordion.Item eventKey="5">
-          <Accordion.Header>Supporto e Contatti</Accordion.Header>
+          <Accordion.Header>Supporto e contatti</Accordion.Header>
           <Accordion.Body>
             Per supporto, richieste o qualsiasi informazione, puoi scrivermi a{" "}
             <a href="mailto:aloisi.lorenzo99@gmail.com">aloisi.lorenzo99@gmail.com</a>.

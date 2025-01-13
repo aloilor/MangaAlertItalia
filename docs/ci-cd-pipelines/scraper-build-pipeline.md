@@ -5,7 +5,7 @@ This workflow tests, builds, and pushes the `manga_scraper` Docker image to Amaz
 ## Key Points
 
 1. **Trigger Conditions**  
-   - Executes on `push` and `pull_request` events to the `main` branch when files under `src/backend/manga_scraper/` are modified.
+   - Executes on `push` events to the `main` branch when files under `src/backend/manga_scraper/` are modified.
 
 2. **Environment Variables**  
    - **ROLE_TO_ASSUME**  

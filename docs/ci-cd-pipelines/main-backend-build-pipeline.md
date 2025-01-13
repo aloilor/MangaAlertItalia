@@ -5,7 +5,7 @@ This workflow tests, builds, and deploys the main backend service to an Amazon E
 ## Key Highlights
 
 1. **Trigger Conditions**  
-   - Runs on `push` and `pull_request` events targeting the `main` branch for changes in `src/backend/main_backend/`.
+   - Runs on `push` events targeting the `main` branch for changes in `src/backend/main_backend/`.
 
 2. **Environment Variables**  
    - **ROLE_TO_ASSUME**  

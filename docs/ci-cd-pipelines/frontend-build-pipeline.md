@@ -5,7 +5,7 @@ This workflow automatically builds, tests, and deploys a frontend application to
 ## Key Points
 
 1. **Trigger Conditions**  
-   - Executes whenever you push or open a pull request targeting the `main` branch under the `src/frontend` folder.
+   - Executes whenever you push targeting the `main` branch under the `src/frontend` folder.
 
 2. **Environment Variables**  
    - **ROLE_TO_ASSUME**  

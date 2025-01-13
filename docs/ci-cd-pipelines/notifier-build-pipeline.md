@@ -5,7 +5,7 @@ This workflow validates code changes in the `email_notifier` service, then packa
 ## Key Points
 
 1. **Trigger Conditions**  
-   - Executes on `push` or `pull_request` to the `main` branch whenever files in `src/backend/email_notifier/` change.
+   - Executes on `push` to the `main` branch whenever files in `src/backend/email_notifier/` change.
 
 2. **Environment Variables**  
    - **ROLE_TO_ASSUME**  
