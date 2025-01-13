@@ -9,7 +9,7 @@ from datetime import date
 
 logger = logging.getLogger(__name__)
 
-UNSUBSCRIBE_ENDPOINT = 'https://api.mangaalertitalia.it/unsubscribe/'
+UNSUBSCRIBE_ENDPOINT = 'https://mangaalertitalia.it/unsubscribe?unsubscribe_token='
 
 
 class EmailNotifier:

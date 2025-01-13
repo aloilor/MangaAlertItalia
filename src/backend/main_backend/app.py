@@ -15,7 +15,7 @@ app = Flask(__name__)
 logger = logging.getLogger(__name__)
 setup_logging()
 
-UNSUBSCRIBE_ENDPOINT = 'https://api.mangaalertitalia.it/unsubscribe/'
+UNSUBSCRIBE_ENDPOINT = 'https://mangaalertitalia.it/unsubscribe?unsubscribe_token='
 
 authorized_mangas = [
     "Solo Leveling",
@@ -23,14 +23,12 @@ authorized_mangas = [
     "Jujutsu Kaisen"
 ]
 
-
-
 max_subscribers = 15
 
 CORS(app, resources={
     r"/subscribe": {
         "origins": ["https://www.mangaalertitalia.it", "https://mangaalertitalia.it", "http://localhost:3000"],
-        "methods": ["POST", "OPTIONS"],
+        "methods": ["POST", "OPTIONS", "DELETE"],
         "allow_headers": ["Content-Type"],
     }
 })
