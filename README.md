@@ -17,7 +17,6 @@ Manga Alert Italia is a full-stack application that tracks physical manga releas
 - [ ] Finish to write documentation
 
 
-
 ## Table of Contents ##
 1. [Features](#features)
 2. [Architecture](#architecture)
@@ -111,6 +110,20 @@ Manga Alert Italia is a full-stack application that tracks physical manga releas
 | **Terraform**        | Infrastructure as Code (IaC) to provision and manage AWS resources. |
 | **Let’s Encrypt**    | SSL certificate provider integrated via AWS Lambda for automated renewal. |
 | **SendGrid**         | Email service used to send notifications to subscribers.        |
+
+## Setup & Installation ##
+
+
+## Usage ##
+
+
+## Testing ## 
+
+
+## CI/CD & Deployment ##
+
+
+## License ## 
 
 
 ## Contacts ##
