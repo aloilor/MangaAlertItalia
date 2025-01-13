@@ -92,20 +92,20 @@ Manga Alert Italia is a full-stack application that tracks physical manga releas
 | **BeautifulSoup**    | Library for HTML parsing and data extraction from publisher pages. |
 | **Flask**            | Python web framework providing RESTful endpoints (subscribe, unsubscribe, etc.). |
 | **pytest / unittest.mock** | Testing libraries for Python, ensuring 85%+ code coverage.|
-| **PostgreSQL (AWS RDS)** | Hosted database storing subscribers, manga releases, and alerts. |
+| **React** / **React Router** | Front-end library for building a single-page application (SPA), including subscription forms and unsubscribe pages. |
+| **React-Bootstrap**  | UI styling and responsive layout for the SPA.                   |
+| **PostgreSQL (AWS RDS)** | AWS-hosted database storing subscribers, manga releases, and alerts. |
 | **AWS Route 53**     | Handles domain management, DNS, and DMARC TXT records for email authentication. |
 | **AWS CloudWatch**   | Monitors logs and application performance for debugging and alerts. |
 | **AWS CloudFront**   | Content Delivery Network (CDN) caching the front-end website. |
 | **AWS EC2**          | Hosts the main backend and cron jobs for scheduled tasks. |
 | **AWS EventBridge**  | Triggers cron jobs for the scraper and email notifications. |
 | **AWS Secrets Manager** | Secure storage for SendGrid API key, SSL certificates, RDS authentication and other sensitive data. |
-| **React** / **React Router** | Front-end library for building a single-page application (SPA), including subscription forms and unsubscribe pages. |
-| **React-Bootstrap**  | UI styling and responsive layout for the SPA.                   |
-| **Docker**           | Containerization of backend services for consistent deployment. |
 | **AWS ECR**          | Hosting Docker images.                                          |
 | **AWS ECS**          | Orchestration of Docker containers with rolling deployments.    |
 | **AWS S3**           | Static hosting for the React front-end.                         |
 | **AWS VPC**          | Private networking for ECS tasks and secure communication.      |
+| **Docker**           | Containerization of backend services for consistent deployment. |
 | **GitHub Actions**   | CI/CD pipeline for automatic testing, building, and deploying.  |
 | **Terraform**        | Infrastructure as Code (IaC) to provision and manage AWS resources. |
 | **Let’s Encrypt**    | SSL certificate provider integrated via AWS Lambda for automated renewal. |
