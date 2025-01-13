@@ -27,6 +27,7 @@ Manga Alert Italia is a full-stack application that tracks physical manga releas
 8. [Testing](#testing)
 9. [CI/CD & Deployment](#cicd--deployment)
 10. [License](#license)
+11. [Contacts](#contacts)
 
 
 ## Features ##
@@ -111,6 +112,11 @@ Manga Alert Italia is a full-stack application that tracks physical manga releas
 | **Let’s Encrypt**    | SSL certificate provider integrated via AWS Lambda for automated renewal. |
 | **SendGrid**         | Email service used to send notifications to subscribers.        |
 
+
+## Contacts ##
+- [aloisi.lorenzo99@gmail.com](mailto:aloisi.lorenzo99@gmail.com)
+- [LinkedIn](https://www.linkedin.com/in/aloilor/)
+- [GitHub](https://github.com/aloilor)
 
 
 
