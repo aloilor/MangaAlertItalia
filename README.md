@@ -1,5 +1,9 @@
 ## Manga Alert Italia - Manga Releases Tracker and Notification System ##
-[<img src="./assets/logo-with-white-bg-crop.png" align="center" width="225" />](https://mangaalertitalia.it/) 
+
+<p align="center"> <a href="https://mangaalertitalia.it/">
+   <img src="./assets/logo-with-white-bg-crop.png" align="center" width="225" />
+</a></p>
+
 
 Manga Alert Italia is a full-stack application that tracks physical manga releases in Italy by scraping publishers’ websites, storing upcoming releases in a database, and sending out timely email notifications to subscribers. The service ensures readers never miss a volume release by automatically sending reminders at key intervals: one month, one week, and one day before a manga volume hits the shelves. 
 
