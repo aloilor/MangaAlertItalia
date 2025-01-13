@@ -28,7 +28,12 @@ max_subscribers = 15
 CORS(app, resources={
     r"/subscribe": {
         "origins": ["https://www.mangaalertitalia.it", "https://mangaalertitalia.it", "http://localhost:3000"],
-        "methods": ["POST", "OPTIONS", "DELETE"],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"],
+    },
+    r"/unsubscribe/*": {
+        "origins": ["https://www.mangaalertitalia.it", "https://mangaalertitalia.it", "http://localhost:3000"],
+        "methods": ["POST", "OPTIONS"],
         "allow_headers": ["Content-Type"],
     }
 })
