@@ -1,4 +1,5 @@
 ## Manga Alert Italia - Manga Releases Tracker and Notification System ##
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=aloilor/MangaAlertItalia)  
 
 <p align="center"> <a href="https://mangaalertitalia.it/">
    <img src="./assets/logo-with-white-bg-crop.png" align="right" width="150" />
