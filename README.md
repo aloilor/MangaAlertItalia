@@ -43,17 +43,16 @@ Manga Alert Italia is a full-stack application that tracks physical manga releas
    - They choose their favorite manga titles (e.g., *Solo Leveling*, *Chainsaw Man*, *Jujutsu Kaisen*).
    - The system enforces a maximum subscriber limit (e.g., 15) with a trigger in PostgreSQL.
 
-3. **Notification Emails**:  
+3. **Unsubscription Service**:  
+   - Users can unsubscribe via a unique token representing user identities embedded in each email.  
+   - A dedicated endpoint on the backend (`/unsubscribe/<token>`) handles user removal and subscription data cleanup.
+
+4. **Notification Emails**:  
    - Sends reminder emails through **SendGrid** (with AWS Secrets Manager storing the API key).
    - Three notifications per volume:  
      - 1 month before release  
      - 1 week before release  
      - 1 day before release  
-   - Includes an unsubscribe link tokenizing user identities for secure one-click unsubscription.
-
-4. **Unsubscribe Flow**:  
-   - Users can unsubscribe via a unique token representing user identities embedded in each email.  
-   - A dedicated endpoint on the backend (`/unsubscribe/<token>`) handles user removal and subscription data cleanup.
 
 5. **SSL Certificate Management**:
    - Integrates **Let’s Encrypt** with **AWS Lambda** for automated certificate renewal.
@@ -63,28 +62,54 @@ Manga Alert Italia is a full-stack application that tracks physical manga releas
 ## Architecture ##
 
 1. **Scraper** (Python):
-   - Periodically runs to fetch new manga volume info and populates a `manga_releases` table in PostgreSQL.
-   - Marks upcoming releases to identify when to send notifications.
+   - Periodically runs to fetch new manga volume information from publisher websites.
+   - Uses Python libraries `requests` and `BeautifulSoup` for HTML parsing and data extraction.
+   - Populates the `manga_releases` table in PostgreSQL with titles, release dates, publishers, and links.
+   - Runs as a scheduled task using **AWS EventBridge** to ensure periodic execution.
+   - Hosted through **AWS ECS** as a containerized task.
 
 2. **Backend (Flask API)**:
-   - **Endpoints**:
-     - `/subscribe`: Subscribes a user to the newsletter; enforces limit of 15 subscribers.
-     - `/unsubscribe/<token>`: Unsubscribes a user via their unique token.
-   - **Database**: Communicates with PostgreSQL to store subscribers, subscriptions, and release alerts.
-   - **Email Handling**: Uses SendGrid for sending out notifications based on the `manga_releases` schedule.
+   - Provides RESTful endpoints for user interactions and data retrieval.
+     - `/subscribe`: Allows users to subscribe to manga release alerts, enforcing a maximum of 15 subscribers per title.
+     - `/unsubscribe/<token>`: Handles secure unsubscriptions using a unique token.
+   - Communicates with PostgreSQL to manage subscribers, subscriptions, and release schedules.
+   - Secures sensitive credentials such as the database connection string using **AWS Secrets Manager**.
+   - Deployed as a containerized Flask application running on **AWS ECS**, with high availability through auto-scaling.
 
-3. **Front-End (React)**:
-   - Deployed on AWS S3 as a static site with a client-side router (`BrowserRouter`).
-   - Subscription form for entering email and selecting manga series.
-   - Unsubscribe page handling the `unsubscribe_token`.
-   - Informazioni page (FAQ-like accordion) explaining the site, privacy policy, and contact info.
+3. **Email Notifier**:
+   - Sends automated notification emails to subscribers at three key intervals:
+     - 1 month before release.
+     - 1 week before release.
+     - 1 day before release.
+   - Utilizes **SendGrid** for email delivery, with API keys securely stored in **AWS Secrets Manager**.
+   - Each email contains a unique, tokenized unsubscribe link to facilitate secure one-click opt-out.
+   - Runs as a scheduled job using **AWS EventBridge**, triggering an ECS task to process notifications.
+   - Ensures compliance with email best practices by integrating with **AWS Route 53** for domain verification and SPF/DKIM/DMARC email authentication.
 
-4. **CI/CD & Deployment**:
-   - **GitHub Actions**: Automated testing with pytest, building Docker images, pushing to AWS ECR.
-   - **Terraform**: Defines AWS resources (ECS tasks, ECR repos, S3 buckets, Secrets Manager, etc.).
-   - **ECS**: Orchestrates Docker containers for the Flask API and any worker processes.
-   - **Let’s Encrypt**: SSL certificates automatically managed via Lambda, stored in Secrets Manager.
+4. **Database**:
+   - Uses **PostgreSQL**, hosted on **AWS RDS**, to store and manage:
+     - User subscriptions and preferences.
+     - Manga release schedules and notifications.
+   - Schema includes tables for tracking subscribers, upcoming releases, and email logs.
+   - Enforces a subscription limit of 15 users through database triggers.
 
+5. **Front-End (React)**:
+   - Developed using **React**, providing a user-friendly interface for managing subscriptions.
+   - Deployed as a static website on **AWS S3**, utilizing **AWS CloudFront** for global content delivery and caching.
+   - Implements a client-side router (`BrowserRouter`) to handle navigation seamlessly.
+   - Key features include:
+     - Subscription form for entering email and selecting manga titles.
+     - Unsubscribe page that processes secure opt-outs via tokenized links.
+     - Informazioni page with an FAQ section, privacy policy, and contact details.
+
+6. **CI/CD & Deployment**:
+   - **GitHub Actions** handles automated testing, Docker image builds, and deployments.
+   - CI/CD pipeline includes:
+     - Unit tests with `pytest` and `unittest.mock`  to achieve 85%+ code coverage.
+     - Docker images built and pushed to **AWS ECR**.
+     - Deployment to **AWS ECS**, ensuring zero downtime with rolling updates.
+   - **Terraform** is used to define and manage AWS infrastructure.
+   - SSL certificates are managed with **Let’s Encrypt**, using AWS Lambda for automatic renewal and storage in **AWS Secrets Manager**.
 
 
 ## Tech Stack ## 
